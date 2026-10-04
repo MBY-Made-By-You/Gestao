@@ -1,25 +1,9 @@
-import {
-  differenceInCalendarDays,
-  format,
-  formatDistanceToNowStrict,
-  isValid,
-  parseISO,
-} from "date-fns";
+import { differenceInCalendarDays, format, formatDistanceToNowStrict, isValid, parseISO } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-/** Fuso da equipe: "hoje" no servidor (UTC na Vercel) segue o horário de Brasília. */
-export const APP_TIME_ZONE = "America/Sao_Paulo";
+import { APP_TIME_ZONE, toWallClock, todayYmd } from "@/lib/timezone";
 
-/** Data de hoje (meia-noite local) no fuso da equipe. */
-export function todayInAppTimeZone(now: Date = new Date()): Date {
-  const ymd = new Intl.DateTimeFormat("en-CA", {
-    timeZone: APP_TIME_ZONE,
-    year: "numeric",
-    month: "2-digit",
-    day: "2-digit",
-  }).format(now);
-  return parseDateOnly(ymd);
-}
+export { APP_TIME_ZONE };
 
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const compactCurrency = new Intl.NumberFormat("pt-BR", {
@@ -53,24 +37,41 @@ export function formatBytes(bytes: number) {
   return `${(bytes / (1024 * 1024)).toFixed(1).replace(".", ",")} MB`;
 }
 
+const DATE_ONLY = /^\d{4}-\d{2}-\d{2}$/;
+
 /**
- * Datas "puras" (coluna date, ex.: 2026-10-04) são interpretadas no fuso local
- * para não "voltar um dia" ao converter de UTC.
+ * Datas "puras" (coluna date, ex.: 2026-10-04) viram meia-noite local, para não
+ * "voltar um dia" ao converter de UTC.
  */
 export function parseDateOnly(value: string): Date {
   const [y, m, d] = value.slice(0, 10).split("-").map(Number);
   return new Date(y, (m ?? 1) - 1, d ?? 1);
 }
 
+/** Hoje (meia-noite local) no fuso da equipe — igual no servidor e no navegador. */
+export function todayInAppTimeZone(now: Date = new Date()): Date {
+  return parseDateOnly(todayYmd(now));
+}
+
+/** Instante real (para comparações e tempo relativo). */
 export function toDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
   if (value instanceof Date) return value;
-  const date = value.length === 10 ? parseDateOnly(value) : parseISO(value);
+  const date = DATE_ONLY.test(value) ? parseDateOnly(value) : parseISO(value);
   return isValid(date) ? date : null;
 }
 
+/** Date pronto para exibição: timestamps são convertidos para o fuso da equipe. */
+function toDisplayDate(value: string | Date | null | undefined): Date | null {
+  if (!value) return null;
+  if (value instanceof Date) return isValid(value) ? value : null;
+  if (DATE_ONLY.test(value)) return parseDateOnly(value);
+  const instant = parseISO(value);
+  return isValid(instant) ? toWallClock(instant) : null;
+}
+
 export function formatDate(value: string | Date | null | undefined, pattern = "dd MMM yyyy") {
-  const date = toDate(value);
+  const date = toDisplayDate(value);
   return date ? format(date, pattern, { locale: ptBR }) : "—";
 }
 
@@ -87,19 +88,19 @@ export function formatRelative(value: string | Date | null | undefined) {
   return date ? formatDistanceToNowStrict(date, { locale: ptBR, addSuffix: true }) : "—";
 }
 
-/** yyyy-MM-dd no fuso local (para inputs type="date" e colunas date). */
-export function toDateInput(date: Date = new Date()) {
+/** yyyy-MM-dd (para inputs type="date" e colunas date). Padrão: hoje na equipe. */
+export function toDateInput(date: Date = todayInAppTimeZone()) {
   return format(date, "yyyy-MM-dd");
 }
 
 /** yyyy-MM (para filtros mensais). */
-export function toMonthInput(date: Date = new Date()) {
+export function toMonthInput(date: Date = todayInAppTimeZone()) {
   return format(date, "yyyy-MM");
 }
 
 export type DueState = "overdue" | "today" | "soon" | "later" | "done" | "none";
 
-export function dueState(due: string | null, completedAt?: string | null, today = new Date()): DueState {
+export function dueState(due: string | null, completedAt?: string | null, today = todayInAppTimeZone()): DueState {
   if (completedAt) return "done";
   if (!due) return "none";
   const diff = differenceInCalendarDays(parseDateOnly(due), today);
@@ -109,7 +110,7 @@ export function dueState(due: string | null, completedAt?: string | null, today 
   return "later";
 }
 
-export function dueLabel(due: string | null, completedAt?: string | null, today = new Date()) {
+export function dueLabel(due: string | null, completedAt?: string | null, today = todayInAppTimeZone()) {
   if (!due) return "Sem prazo";
   const state = dueState(due, completedAt, today);
   const diff = differenceInCalendarDays(parseDateOnly(due), today);

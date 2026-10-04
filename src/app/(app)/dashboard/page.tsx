@@ -288,7 +288,7 @@ export default async function DashboardPage() {
             {data.upcomingEvents.length ? (
               <ul className="space-y-2">
                 {data.upcomingEvents.map((event) => {
-                  const date = new Date(event.starts_at);
+                  const date = event.starts_at;
                   return (
                     <li key={event.id} className="flex items-center gap-3 rounded-xl border p-2.5">
                       <div className="grid w-12 shrink-0 place-items-center rounded-lg bg-brand-soft py-1 text-brand-strong dark:text-brand">

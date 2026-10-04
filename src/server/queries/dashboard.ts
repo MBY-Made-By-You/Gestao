@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 
 import { buildBurndown, type BurndownResult } from "@/lib/analytics/burndown";
 import { toDateInput, todayInAppTimeZone } from "@/lib/format";
+import { wallTimeToIso } from "@/lib/timezone";
 import { createClient } from "@/lib/supabase/server";
 import type { CalendarEvent, MemberStats, MiniProfile, SessionProfile, TaskPriority } from "@/lib/types";
 import { toNumber } from "@/lib/utils";
@@ -88,8 +89,8 @@ export async function getDashboardData(profile: SessionProfile): Promise<Dashboa
     supabase
       .from("events")
       .select("*, project:projects(name, color)")
-      .gte("starts_at", new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString())
-      .lte("starts_at", addDays(today, 14).toISOString())
+      .gte("starts_at", wallTimeToIso(todayStr))
+      .lte("starts_at", wallTimeToIso(toDateInput(addDays(today, 14)), "23:59"))
       .order("starts_at")
       .limit(5),
     supabase.from("member_stats").select("*").order("xp", { ascending: false }),

@@ -3,6 +3,7 @@ import "server-only";
 import { addDays, endOfMonth, endOfWeek, startOfMonth, startOfWeek } from "date-fns";
 
 import { toDateInput } from "@/lib/format";
+import { wallTimeToIso } from "@/lib/timezone";
 import { createClient } from "@/lib/supabase/server";
 import type { AppRole, CalendarEvent, MiniProfile, TaskPriority } from "@/lib/types";
 
@@ -36,8 +37,9 @@ export function calendarRange(view: CalendarView, anchor: Date) {
 export async function getCalendarData(view: CalendarView, anchor: Date) {
   const supabase = await createClient();
   const { start, end } = calendarRange(view, anchor);
-  const fromIso = new Date(start.getFullYear(), start.getMonth(), start.getDate()).toISOString();
-  const toIso = new Date(end.getFullYear(), end.getMonth(), end.getDate(), 23, 59, 59).toISOString();
+  // Limites do intervalo no fuso da equipe (o servidor roda em UTC).
+  const fromIso = wallTimeToIso(toDateInput(start), "00:00");
+  const toIso = new Date(new Date(wallTimeToIso(toDateInput(end), "23:59")).getTime() + 59_999).toISOString();
 
   const [eventsRes, tasksRes, projectsRes, profilesRes] = await Promise.all([
     supabase
