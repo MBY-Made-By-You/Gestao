@@ -23,6 +23,7 @@ import {
   type DragOverEvent,
   type DragStartEvent,
   type DropAnimation,
+  type KeyboardCoordinateGetter,
   type UniqueIdentifier,
 } from "@dnd-kit/core";
 import { SortableContext, arrayMove, horizontalListSortingStrategy, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
@@ -63,7 +64,7 @@ const dropAnimation: DropAnimation = {
 
 const screenReaderInstructions = {
   draggable:
-    "Para mover, pressione espaço. Use as setas para escolher o destino e espaço para soltar. Esc cancela. Enter abre os detalhes.",
+    "Para mover, pressione espaço. Use ← e → para trocar de coluna, ↑ e ↓ para mudar a posição e espaço para soltar. Esc cancela. Enter abre os detalhes.",
 };
 
 const subscribeNoop = () => () => {};
@@ -139,13 +140,48 @@ export function KanbanBoard({
     }, [router]),
   );
 
+  /**
+   * Teclado: ←/→ leva o card para a coluna vizinha; ↑/↓ muda a posição dentro
+   * da coluna atual. (O padrão do dnd-kit não conhece colunas.)
+   */
+  const keyboardCoordinates: KeyboardCoordinateGetter = useCallback((event, args) => {
+    const { active, droppableRects, droppableContainers } = args.context;
+    if (!active || active.data.current?.type === "column") return sortableKeyboardCoordinates(event, args);
+    const state = boardRef.current;
+    const columnId = findTaskColumn(state, String(active.id));
+    if (!columnId) return undefined;
+
+    if (event.code === "ArrowLeft" || event.code === "ArrowRight") {
+      event.preventDefault();
+      const index = state.columns.findIndex((c) => c.id === columnId);
+      const target = state.columns[index + (event.code === "ArrowRight" ? 1 : -1)];
+      const rect = target ? droppableRects.get(target.id) : null;
+      return rect ? { x: rect.left + 8, y: rect.top + 56 } : undefined;
+    }
+
+    if (event.code === "ArrowUp" || event.code === "ArrowDown") {
+      const sameColumn = new Set(state.tasksByColumn[columnId].map((t) => t.id));
+      const restricted = {
+        getEnabled: () => droppableContainers.getEnabled().filter((c) => sameColumn.has(String(c.id))),
+        get: (id: UniqueIdentifier) => droppableContainers.get(id),
+      } as typeof droppableContainers;
+      return sortableKeyboardCoordinates(event, { ...args, context: { ...args.context, droppableContainers: restricted } });
+    }
+    return undefined;
+  }, []);
+
+  const keyboardOptions = useMemo(
+    () => ({
+      coordinateGetter: keyboardCoordinates,
+      keyboardCodes: { start: ["Space"], cancel: ["Escape"], end: ["Space", "Enter"] },
+    }),
+    [keyboardCoordinates],
+  );
+
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-      keyboardCodes: { start: ["Space"], cancel: ["Escape"], end: ["Space", "Enter"] },
-    }),
+    useSensor(KeyboardSensor, keyboardOptions),
   );
 
   const isColumnId = useCallback(
@@ -349,13 +385,25 @@ export function KanbanBoard({
     return task ? `tarefa ${task.title}` : "item";
   }, []);
 
+  /** "na coluna Em Andamento, posição 2 de 5" (ou a posição da coluna no quadro). */
+  const positionOf = useCallback((id: UniqueIdentifier) => {
+    const state = boardRef.current;
+    const columnIndex = state.columns.findIndex((c) => c.id === id);
+    if (columnIndex >= 0) return `na posição ${columnIndex + 1} de ${state.columns.length}`;
+    const columnId = findTaskColumn(state, String(id));
+    if (!columnId) return "";
+    const tasks = state.tasksByColumn[columnId];
+    const name = state.columns.find((c) => c.id === columnId)?.name ?? "";
+    return `na coluna ${name}, posição ${tasks.findIndex((t) => t.id === id) + 1} de ${tasks.length}`;
+  }, []);
+
   const announcements: Announcements = {
-    onDragStart: ({ active: a }) => `Você pegou a ${labelOf(a.id)}.`,
+    onDragStart: ({ active: a }) => `Você pegou a ${labelOf(a.id)}, ${positionOf(a.id)}.`,
     onDragOver: ({ active: a, over }) =>
-      over ? `${labelOf(a.id)} sobre ${labelOf(over.id)}.` : `${labelOf(a.id)} fora de uma área válida.`,
+      over ? `${labelOf(a.id)} ${positionOf(a.id)}.` : `${labelOf(a.id)} fora de uma área válida.`,
     onDragEnd: ({ active: a, over }) =>
-      over ? `${labelOf(a.id)} solta em ${labelOf(over.id)}.` : `${labelOf(a.id)} solta.`,
-    onDragCancel: ({ active: a }) => `Movimento da ${labelOf(a.id)} cancelado.`,
+      over ? `${labelOf(a.id)} solta ${positionOf(a.id)}.` : `${labelOf(a.id)} solta.`,
+    onDragCancel: ({ active: a }) => `Movimento da ${labelOf(a.id)} cancelado; voltou ${positionOf(a.id)}.`,
   };
 
   // ---------------------------------------------------------------------------
@@ -440,6 +488,7 @@ export function KanbanBoard({
       />
 
       <DndContext
+        id={`kanban-${data.project.id}`} // id estável: evita divergência de hidratação no aria-describedby
         sensors={sensors}
         collisionDetection={collisionDetection}
         measuring={{ droppable: { strategy: MeasuringStrategy.Always } }}

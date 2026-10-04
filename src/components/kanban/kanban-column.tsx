@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Textarea } from "@/components/ui/textarea";
+import { plural } from "@/lib/format";
 import type { BoardColumn, TaskCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -80,7 +81,7 @@ export function KanbanColumn({
             "ml-auto rounded-full px-2 py-0.5 text-[11px] font-bold tabular-nums",
             overWip ? "bg-destructive/15 text-destructive" : "bg-card text-muted-foreground",
           )}
-          title={column.wip_limit ? `Limite WIP: ${column.wip_limit}` : `${totalCount} tarefa(s)`}
+          title={column.wip_limit ? `Limite WIP: ${column.wip_limit}` : plural(totalCount, "tarefa")}
         >
           {filtered ? `${tasks.length}/` : ""}
           {totalCount}
@@ -107,7 +108,7 @@ export function KanbanColumn({
       </header>
 
       {points > 0 && (
-        <p className="-mt-1 px-3 pb-2 text-[11px] font-medium text-muted-foreground">{points} pontos</p>
+        <p className="-mt-1 px-3 pb-2 text-[11px] font-medium text-muted-foreground">{plural(points, "ponto")}</p>
       )}
 
       <div className="scrollbar-thin flex min-h-24 flex-1 flex-col gap-2 overflow-y-auto px-2 pb-2">
@@ -153,7 +154,7 @@ export function ColumnPreview({ column, tasks }: { column: BoardColumn; tasks: T
           </div>
         ))}
         {tasks.length > 3 && (
-          <p className="px-1 text-xs font-semibold text-muted-foreground">+{tasks.length - 3} tarefa(s)</p>
+          <p className="px-1 text-xs font-semibold text-muted-foreground">+{plural(tasks.length - 3, "tarefa")}</p>
         )}
       </div>
     </section>
@@ -169,19 +170,20 @@ function QuickAdd({
 }) {
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
-  const [saving, setSaving] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const saving = pendingCount > 0;
 
+  /** Limpa o campo na hora para permitir adicionar várias em sequência. */
   async function submit() {
     const value = title.trim();
-    if (!value || saving) return;
-    setSaving(true);
+    if (!value) return;
+    setTitle("");
+    setPendingCount((n) => n + 1);
     const ok = await onQuickAdd(columnId, value);
-    setSaving(false);
-    if (ok) {
-      setTitle("");
-      inputRef.current?.focus();
-    }
+    setPendingCount((n) => n - 1);
+    if (!ok) setTitle((current) => current || value); // devolve o texto se falhar
+    inputRef.current?.focus();
   }
 
   if (!open) {
@@ -228,7 +230,7 @@ function QuickAdd({
         >
           Cancelar
         </Button>
-        <Button size="sm" onClick={() => void submit()} disabled={!title.trim() || saving}>
+        <Button size="sm" onClick={() => void submit()} disabled={!title.trim()}>
           {saving && <Loader2 className="animate-spin" />}
           Adicionar
         </Button>
