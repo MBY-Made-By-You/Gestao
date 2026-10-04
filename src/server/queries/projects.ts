@@ -1,7 +1,7 @@
 import "server-only";
 
 import { buildBurndown, type BurndownResult } from "@/lib/analytics/burndown";
-import { toDateInput } from "@/lib/format";
+import { toDateInput, todayInAppTimeZone } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type {
   AppRole,
@@ -78,7 +78,7 @@ export async function getProjectOverview(projectId: string): Promise<ProjectOver
   const { data: project } = await supabase.from("projects").select("*").eq("id", projectId).maybeSingle();
   if (!project) return null;
 
-  const today = toDateInput();
+  const today = toDateInput(todayInAppTimeZone());
   const [progressRes, financialsRes, membersRes, profilesRes, sprintsRes, tasksRes, milestonesRes, upcomingRes] =
     await Promise.all([
       supabase.from("project_progress").select("*").eq("project_id", projectId).maybeSingle(),
@@ -137,7 +137,7 @@ export async function getProjectOverview(projectId: string): Promise<ProjectOver
     allProfiles: profilesRes.data ?? [],
     sprints,
     activeSprint,
-    burndown: { ...buildBurndown(scopedTasks, { start, end }), scope, label, start, end },
+    burndown: { ...buildBurndown(scopedTasks, { start, end }, todayInAppTimeZone()), scope, label, start, end },
     milestones: milestonesRes.data ?? [],
     upcomingTasks: upcomingRes.data ?? [],
     ownerName: owner?.full_name ?? null,

@@ -7,6 +7,20 @@ import {
 } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
+/** Fuso da equipe: "hoje" no servidor (UTC na Vercel) segue o horário de Brasília. */
+export const APP_TIME_ZONE = "America/Sao_Paulo";
+
+/** Data de hoje (meia-noite local) no fuso da equipe. */
+export function todayInAppTimeZone(now: Date = new Date()): Date {
+  const ymd = new Intl.DateTimeFormat("en-CA", {
+    timeZone: APP_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(now);
+  return parseDateOnly(ymd);
+}
+
 const currency = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
 const compactCurrency = new Intl.NumberFormat("pt-BR", {
   style: "currency",

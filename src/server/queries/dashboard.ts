@@ -4,7 +4,7 @@ import { addDays, format, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 import { buildBurndown, type BurndownResult } from "@/lib/analytics/burndown";
-import { toDateInput } from "@/lib/format";
+import { toDateInput, todayInAppTimeZone } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { CalendarEvent, MemberStats, MiniProfile, SessionProfile, TaskPriority } from "@/lib/types";
 import { toNumber } from "@/lib/utils";
@@ -55,7 +55,7 @@ export type DashboardData = {
 
 export async function getDashboardData(profile: SessionProfile): Promise<DashboardData> {
   const supabase = await createClient();
-  const today = new Date();
+  const today = todayInAppTimeZone();
   const todayStr = toDateInput(today);
   const weekAhead = toDateInput(addDays(today, 7));
   const historyStart = toDateInput(startOfMonth(subMonths(today, 5)));

@@ -3,7 +3,7 @@ import "server-only";
 import { endOfMonth, format, startOfMonth, subMonths } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-import { toDateInput } from "@/lib/format";
+import { toDateInput, todayInAppTimeZone } from "@/lib/format";
 import { createClient } from "@/lib/supabase/server";
 import type { FinanceCategory, Resource, ResourceMovement, Transaction } from "@/lib/types";
 import { toNumber } from "@/lib/utils";
@@ -45,7 +45,8 @@ export type FinanceOverview = {
 /** `monthParam` = yyyy-MM; padrão: mês atual. */
 export async function getFinanceOverview(monthParam?: string): Promise<FinanceOverview> {
   const supabase = await createClient();
-  const parsed = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? new Date(`${monthParam}-01T12:00:00`) : new Date();
+  const parsed =
+    monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? new Date(`${monthParam}-01T12:00:00`) : todayInAppTimeZone();
   const month = startOfMonth(parsed);
   const from = toDateInput(month);
   const to = toDateInput(endOfMonth(month));
@@ -151,7 +152,7 @@ export type MovementRow = ResourceMovement & {
 
 export async function getResourcesOverview() {
   const supabase = await createClient();
-  const monthStart = toDateInput(startOfMonth(new Date()));
+  const monthStart = toDateInput(startOfMonth(todayInAppTimeZone()));
   const [resRes, movRes, projRes] = await Promise.all([
     supabase.from("resources").select("*").order("name"),
     supabase
