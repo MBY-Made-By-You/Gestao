@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Download, X } from "lucide-react";
 
 import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
@@ -25,7 +25,11 @@ export function ImageLightbox({
   onIndexChange: (index: number) => void;
   onClose: () => void;
 }) {
-  const current = index !== null ? items[index] : null;
+  // Mantém a última imagem visível durante a animação de saída (index vira null ao fechar).
+  const [shownIndex, setShownIndex] = useState(index);
+  if (index !== null && index !== shownIndex) setShownIndex(index);
+  const open = index !== null && items[index] !== undefined;
+  const current = shownIndex !== null ? (items[shownIndex] ?? null) : null;
   const go = useCallback(
     (delta: number) => {
       if (index === null || items.length < 2) return;
@@ -45,7 +49,7 @@ export function ImageLightbox({
   }, [go, index]);
 
   return (
-    <Dialog open={current !== null} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(next) => !next && onClose()}>
       <DialogContent
         showCloseButton={false}
         className="flex h-[92dvh] max-w-[min(1200px,96vw)] flex-col gap-0 overflow-hidden border-white/10 bg-[#05070b]/95 p-0 text-white sm:max-w-[min(1200px,96vw)]"
@@ -62,7 +66,7 @@ export function ImageLightbox({
                 </DialogDescription>
               </div>
               <span className="text-xs text-white/60 tabular-nums">
-                {(index ?? 0) + 1}/{items.length}
+                {(shownIndex ?? 0) + 1}/{items.length}
               </span>
               <a
                 href={downloadUrl(current)}

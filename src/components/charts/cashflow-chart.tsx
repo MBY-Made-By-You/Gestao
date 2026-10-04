@@ -3,6 +3,7 @@
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 import { ChartLegend, ChartTooltip } from "@/components/charts/chart-tooltip";
+import { niceTicks } from "@/lib/analytics/ticks";
 import { formatCompactCurrency, formatCurrency } from "@/lib/format";
 
 export type CashflowDatum = { label: string; income: number; expense: number; balance: number };
@@ -17,6 +18,9 @@ export function CashflowChart({
   height?: number;
   highlightLast?: boolean;
 }) {
+  const max = Math.max(0, ...data.map((d) => Math.max(d.income, d.expense)));
+  const ticks = niceTicks(max);
+
   return (
     <div className="space-y-3">
       <ChartLegend
@@ -25,7 +29,12 @@ export function CashflowChart({
           { label: "Despesas", color: "var(--chart-2)" },
         ]}
       />
-      <div style={{ height }} className="w-full" role="img" aria-label="Gráfico de receitas e despesas por mês">
+      <div style={{ height }} className="relative w-full" role="img" aria-label="Gráfico de receitas e despesas por mês">
+        {max === 0 && (
+          <p className="absolute inset-x-0 top-1/3 z-10 text-center text-sm text-muted-foreground">
+            Nenhum lançamento efetivado no período.
+          </p>
+        )}
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barGap={2} barCategoryGap="28%">
             <CartesianGrid vertical={false} stroke="var(--chart-grid)" strokeWidth={1} />
@@ -36,6 +45,8 @@ export function CashflowChart({
               tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}
             />
             <YAxis
+              ticks={ticks}
+              domain={[0, ticks.at(-1)!]}
               tickLine={false}
               axisLine={false}
               width={64}

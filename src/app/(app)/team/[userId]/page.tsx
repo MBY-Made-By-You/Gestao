@@ -110,7 +110,7 @@ export default async function MemberPage({ params }: PageProps<"/team/[userId]">
         <StatTile label="Em aberto" value={stats.open_tasks ?? 0} icon={ListTodo} tone="neutral" />
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[1fr_380px]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <Card>
             <CardHeader>

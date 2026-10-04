@@ -7,7 +7,7 @@ import { CalendarClock, CircleCheckBig, Flag, Paperclip } from "lucide-react";
 
 import { UserAvatar } from "@/components/ui/avatar";
 import { PRIORITY_LABEL, PRIORITY_STYLE } from "@/lib/constants";
-import { dueLabel, dueState } from "@/lib/format";
+import { dueLabel, dueState, plural } from "@/lib/format";
 import type { TaskCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
@@ -108,7 +108,7 @@ export const TaskCardView = memo(function TaskCardView({
         {task.attachment_count > 0 && (
           <span
             className="inline-flex items-center gap-0.5 text-[11px] font-semibold text-muted-foreground"
-            title={`${task.attachment_count} anexo(s)`}
+            title={plural(task.attachment_count, "anexo")}
           >
             <Paperclip className="size-3" />
             {task.attachment_count}
@@ -118,7 +118,7 @@ export const TaskCardView = memo(function TaskCardView({
           {task.story_points > 0 && (
             <span
               className="grid h-5 min-w-5 place-items-center rounded-full bg-secondary px-1 text-[10.5px] font-bold text-secondary-foreground"
-              title={`${task.story_points} ponto(s) · ${task.xp_reward ?? 0} XP`}
+              title={`${plural(task.story_points, "ponto")} · ${task.xp_reward ?? 0} XP`}
             >
               {task.story_points}
             </span>

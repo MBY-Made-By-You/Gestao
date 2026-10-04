@@ -74,7 +74,7 @@ export function buildBurndown(
     return {
       date: format(day, "yyyy-MM-dd"),
       label: format(day, "dd MMM", { locale: ptBR }),
-      ideal: Math.round(ideal * 10) / 10,
+      ideal: Math.round(ideal * 100) / 100, // 2 casas: evita "degraus" na linha ideal com escopo pequeno
       remaining,
     };
   });

@@ -24,6 +24,12 @@ import type { CalendarEventItem } from "@/server/queries/calendar";
 
 const NONE = "__none__";
 
+const CREATED_MESSAGE: Record<EventType, string> = {
+  event: "Evento criado",
+  meeting: "Reunião criada",
+  milestone: "Marco criado",
+};
+
 export type EventDraft = { date: string; time?: string };
 
 export function EventDialog({
@@ -92,7 +98,7 @@ export function EventDialog({
         toast.error(result.error);
         return;
       }
-      toast.success(event ? "Evento atualizado" : `${EVENT_TYPE_LABEL[type]} criado(a)`);
+      toast.success(event ? "Evento atualizado" : CREATED_MESSAGE[type]);
       onOpenChange(false);
     });
   }

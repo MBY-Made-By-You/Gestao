@@ -80,9 +80,17 @@ export async function getBacklogData(projectId: string) {
   const { data: sprintTasks } = sprintIds.length
     ? await supabase
         .from("tasks")
-        .select("sprint_id, story_points, completed_at, column_id")
+        .select("id, sprint_id, story_points, completed_at, column_id")
         .in("sprint_id", sprintIds)
-    : { data: [] as { sprint_id: string | null; story_points: number; completed_at: string | null; column_id: string | null }[] };
+    : {
+        data: [] as {
+          id: string;
+          sprint_id: string | null;
+          story_points: number;
+          completed_at: string | null;
+          column_id: string | null;
+        }[],
+      };
 
   return {
     project: projectRes.data,

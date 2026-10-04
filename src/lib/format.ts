@@ -27,6 +27,11 @@ export function formatNumber(value: number | null | undefined) {
   return number.format(value ?? 0);
 }
 
+/** "1 tarefa", "0 tarefas", "3 tarefas" (zero vai no plural, como no português). */
+export function plural(count: number, singular: string, pluralForm = `${singular}s`) {
+  return `${formatNumber(count)} ${count === 1 ? singular : pluralForm}`;
+}
+
 export function formatPercent(ratio: number) {
   return percent.format(Number.isFinite(ratio) ? ratio : 0);
 }
@@ -81,6 +86,16 @@ export function formatShortDate(value: string | Date | null | undefined) {
 
 export function formatDateTime(value: string | Date | null | undefined) {
   return formatDate(value, "dd MMM yyyy, HH:mm");
+}
+
+/** Só a primeira letra maiúscula ("Outubro de 2026"), como pede a norma do português. */
+export function capitalizeFirst(text: string) {
+  return text.charAt(0).toLocaleUpperCase("pt-BR") + text.slice(1);
+}
+
+/** "Outubro de 2026" */
+export function formatMonthYear(date: Date) {
+  return capitalizeFirst(format(date, "MMMM 'de' yyyy", { locale: ptBR }));
 }
 
 export function formatRelative(value: string | Date | null | undefined) {

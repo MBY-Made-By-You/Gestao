@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import {
   ArrowRightToLine,
   CalendarRange,
@@ -32,13 +33,19 @@ import {
 import { Checkbox, Progress } from "@/components/ui/misc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRIORITY_LABEL, PRIORITY_STYLE, SPRINT_STATUS_LABEL } from "@/lib/constants";
-import { dueLabel, dueState, formatShortDate } from "@/lib/format";
+import { dueLabel, dueState, formatShortDate, plural } from "@/lib/format";
 import type { BoardColumn, MiniProfile, Project, Sprint, Tag, TaskCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { updateTask } from "@/server/actions/board";
 import { completeSprint, deleteSprint, sendTasksToBoard, startSprint } from "@/server/actions/projects";
 
-type SprintTaskStat = { sprint_id: string | null; story_points: number; completed_at: string | null; column_id: string | null };
+type SprintTaskStat = {
+  id: string;
+  sprint_id: string | null;
+  story_points: number;
+  completed_at: string | null;
+  column_id: string | null;
+};
 
 const NO_SPRINT = "__none__";
 
@@ -63,6 +70,7 @@ export function BacklogView({
   canEdit: boolean;
   currentUserId: string;
 }) {
+  const router = useRouter();
   const [tasks, setTasks] = useState(initialTasks);
   const [tags, setTags] = useState(initialTags);
   const [source, setSource] = useState(initialTasks);
@@ -90,6 +98,13 @@ export function BacklogView({
     [sprints],
   );
   const completedSprints = sprints.filter((s) => s.status === "completed");
+
+  // Tarefas do quadro vêm do servidor; as do backlog, do estado local — assim planejar
+  // uma tarefa em uma sprint atualiza os contadores na hora.
+  const sprintStats = useMemo(() => {
+    const loaded = new Set(source.map((t) => t.id));
+    return [...sprintTasks.filter((t) => !loaded.has(t.id)), ...tasks];
+  }, [sprintTasks, source, tasks]);
 
   const groups = useMemo(() => {
     const result: { key: string; title: string; sprint: Sprint | null; tasks: TaskCard[] }[] = [];
@@ -121,7 +136,9 @@ export function BacklogView({
       }
       setTasks((prev) => prev.filter((t) => !ids.includes(t.id)));
       setSelected(new Set());
-      toast.success(`${result.data!.moved} tarefa(s) enviada(s) para “${columns[0]?.name ?? "o quadro"}”`);
+      toast.success(
+        `${plural(result.data!.moved, "tarefa enviada", "tarefas enviadas")} para “${columns[0]?.name ?? "o quadro"}”`,
+      );
     });
   }
 
@@ -142,13 +159,17 @@ export function BacklogView({
       if (action === "start") {
         const result = await startSprint(sprint.id);
         if (!result.ok) return void toast.error(result.error);
-        toast.success(`Sprint iniciada — ${result.data!.moved} tarefa(s) foram para o quadro.`);
+        toast.success(
+          result.data!.moved
+            ? `Sprint iniciada — ${plural(result.data!.moved, "tarefa foi", "tarefas foram")} para o quadro.`
+            : "Sprint iniciada.",
+        );
       } else if (action === "complete") {
         const result = await completeSprint(sprint.id);
         if (!result.ok) return void toast.error(result.error);
         toast.success(
           result.data!.carriedOver
-            ? `Sprint concluída. ${result.data!.carriedOver} tarefa(s) não concluída(s) ficaram sem sprint.`
+            ? `Sprint concluída. ${plural(result.data!.carriedOver, "tarefa não concluída ficou", "tarefas não concluídas ficaram")} sem sprint.`
             : "Sprint concluída. Tudo entregue! 🎉",
         );
       } else {
@@ -159,15 +180,19 @@ export function BacklogView({
     });
   }
 
-  const handleTaskChange = useCallback((task: TaskCard) => {
-    if (task.column_id) {
-      setTasks((prev) => prev.filter((t) => t.id !== task.id));
-      setOpenTaskId(null);
-      toast.success("Tarefa enviada para o quadro");
-      return;
-    }
-    setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
-  }, []);
+  const handleTaskChange = useCallback(
+    (task: TaskCard) => {
+      if (task.column_id) {
+        setTasks((prev) => prev.filter((t) => t.id !== task.id));
+        setOpenTaskId(null);
+        toast.success("Tarefa enviada para o quadro");
+        router.refresh(); // atualiza os contadores das sprints
+        return;
+      }
+      setTasks((prev) => prev.map((t) => (t.id === task.id ? task : t)));
+    },
+    [router],
+  );
 
   const openTask = tasks.find((t) => t.id === openTaskId) ?? null;
 
@@ -192,7 +217,7 @@ export function BacklogView({
         ) : (
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {openSprints.map((sprint) => {
-              const stats = sprintTasks.filter((t) => t.sprint_id === sprint.id);
+              const stats = sprintStats.filter((t) => t.sprint_id === sprint.id);
               const points = stats.reduce((s, t) => s + t.story_points, 0);
               const donePoints = stats.filter((t) => t.completed_at).reduce((s, t) => s + t.story_points, 0);
               const inBacklog = stats.filter((t) => !t.column_id && !t.completed_at).length;
@@ -244,7 +269,7 @@ export function BacklogView({
                   <div className="space-y-1.5">
                     <div className="flex justify-between text-xs">
                       <span className="text-muted-foreground">
-                        {stats.length} tarefa(s) · {inBacklog} no backlog
+                        {plural(stats.length, "tarefa")} · {inBacklog} no backlog
                       </span>
                       <span className="font-semibold tabular-nums">
                         {donePoints}/{points} pts
@@ -284,7 +309,7 @@ export function BacklogView({
               onClick={() => setShowCompleted((v) => !v)}
               className="text-xs font-semibold text-muted-foreground hover:text-foreground"
             >
-              {showCompleted ? "Ocultar" : "Ver"} {completedSprints.length} sprint(s) concluída(s)
+              {showCompleted ? "Ocultar" : "Ver"} {plural(completedSprints.length, "sprint concluída", "sprints concluídas")}
             </button>
             {showCompleted && (
               <ul className="mt-2 flex flex-wrap gap-2">
@@ -305,7 +330,7 @@ export function BacklogView({
           <div>
             <h2 className="text-base font-extrabold">Backlog</h2>
             <p className="text-xs text-muted-foreground">
-              {tasks.length} tarefa(s) fora do quadro · {totalPoints} pontos
+              {plural(tasks.length, "tarefa")} fora do quadro · {plural(totalPoints, "ponto")}
             </p>
           </div>
           {canEdit && (
@@ -409,7 +434,9 @@ export function BacklogView({
                                 onValueChange={(v) => planInSprint(task, v === NO_SPRINT ? null : v)}
                               >
                                 <SelectTrigger size="sm" className="w-36" aria-label="Planejar em sprint">
-                                  <SelectValue />
+                                  <SelectValue>
+                                    {openSprints.find((s) => s.id === task.sprint_id)?.name ?? "Sem sprint"}
+                                  </SelectValue>
                                 </SelectTrigger>
                                 <SelectContent>
                                   <SelectItem value={NO_SPRINT}>Sem sprint</SelectItem>

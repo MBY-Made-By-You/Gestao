@@ -33,7 +33,7 @@ export function RoleSelect({ userId, role, disabled }: { userId: string; role: A
     <Select value={value} onValueChange={(v) => change(v as AppRole)} disabled={disabled || pending}>
       <SelectTrigger size="sm" className="w-36" aria-label="Perfil de acesso">
         {pending ? <Loader2 className="animate-spin" /> : null}
-        <SelectValue />
+        <SelectValue>{ROLE_LABEL[value]}</SelectValue>
       </SelectTrigger>
       <SelectContent>
         {(Object.keys(ROLE_LABEL) as AppRole[]).map((r) => (

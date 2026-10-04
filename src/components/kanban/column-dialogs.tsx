@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/misc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { plural } from "@/lib/format";
 import type { BoardColumn } from "@/lib/types";
 import { createColumn, deleteColumn, updateColumn } from "@/server/actions/board";
 
@@ -169,7 +170,7 @@ export function DeleteColumnDialog({
           <AlertDialogTitle>Excluir a coluna “{column.name}”?</AlertDialogTitle>
           <AlertDialogDescription>
             {taskCount > 0
-              ? `Ela tem ${taskCount} tarefa(s). Escolha para onde elas vão:`
+              ? `Ela tem ${plural(taskCount, "tarefa")}. Escolha para onde ${taskCount === 1 ? "ela vai" : "elas vão"}:`
               : "A coluna está vazia e será removida do quadro."}
           </AlertDialogDescription>
         </AlertDialogHeader>

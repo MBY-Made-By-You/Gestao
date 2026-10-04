@@ -26,7 +26,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/misc";
-import { formatBytes } from "@/lib/format";
+import { formatBytes, plural } from "@/lib/format";
 import type { AttachmentWithUrl } from "@/lib/storage/attachments";
 import { cn } from "@/lib/utils";
 
@@ -71,7 +71,7 @@ export function TaskAttachments({
         </span>
         {proofCount > 0 && (
           <span className="inline-flex items-center gap-1 rounded-full bg-success/12 px-2 py-0.5 text-[11px] font-bold text-success">
-            <BadgeCheck className="size-3" /> {proofCount} comprovação(ões)
+            <BadgeCheck className="size-3" /> {plural(proofCount, "comprovação", "comprovações")}
           </span>
         )}
       </div>

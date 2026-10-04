@@ -26,7 +26,7 @@ import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/misc";
 import { requireProfile } from "@/lib/auth";
 import { EVENT_TYPE_LABEL, PRIORITY_STYLE } from "@/lib/constants";
-import { dueLabel, dueState, formatCurrency, formatDate, formatPercent, todayInAppTimeZone } from "@/lib/format";
+import { dueLabel, dueState, formatCurrency, formatDate, formatPercent, plural, todayInAppTimeZone } from "@/lib/format";
 import { levelInfo } from "@/lib/gamification";
 import { cn } from "@/lib/utils";
 import { getDashboardData } from "@/server/queries/dashboard";
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             {data.urgentTasks.length
-              ? `Você tem ${data.urgentTasks.length} tarefa(s) urgente(s) nesta semana${overdue ? `, ${overdue} atrasada(s)` : ""}.`
+              ? `Você tem ${plural(data.urgentTasks.length, "tarefa urgente", "tarefas urgentes")} nesta semana${overdue ? `, ${plural(overdue, "atrasada")}` : ""}.`
               : "Nenhuma tarefa urgente nesta semana. Bom trabalho!"}
           </p>
           <div className="flex flex-wrap items-center gap-3 pt-1">
@@ -90,20 +90,20 @@ export default async function DashboardPage() {
         <StatTile
           label="Projetos ativos"
           value={data.projects.length}
-          hint={`${data.projects.reduce((s, p) => s + p.overdueTasks, 0)} tarefa(s) atrasada(s) no total`}
+          hint={`${plural(data.projects.reduce((s, p) => s + p.overdueTasks, 0), "tarefa atrasada", "tarefas atrasadas")} no total`}
           icon={FolderKanban}
         />
         <StatTile
           label="Tarefas em aberto"
           value={data.openTasks}
-          hint={`${data.myOpenTasks} atribuída(s) a você`}
+          hint={`${plural(data.myOpenTasks, "atribuída", "atribuídas")} a você`}
           icon={ListTodo}
           tone="neutral"
         />
         <StatTile
           label="Urgentes da semana"
           value={data.urgentTasks.length}
-          hint={overdue ? `${overdue} já atrasada(s)` : "Prazos nos próximos 7 dias"}
+          hint={overdue ? `${plural(overdue, "já atrasada", "já atrasadas")}` : "Prazos nos próximos 7 dias"}
           icon={AlertTriangle}
           tone={overdue ? "danger" : "warning"}
         />
@@ -128,7 +128,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Burn-down + urgentes ------------------------------------------------- */}
-      <section className="grid gap-5 xl:grid-cols-[1fr_380px]">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardHeader>
             <CardTitle>Burn-down</CardTitle>
@@ -350,7 +350,7 @@ export default async function DashboardPage() {
                           {member.profile.full_name}
                         </Link>
                         <p className="text-xs text-muted-foreground">
-                          Nível {info.level} · {member.tasks_completed} concluída(s)
+                          Nível {info.level} · {plural(member.tasks_completed ?? 0, "concluída")}
                         </p>
                       </div>
                       <span className="text-sm font-extrabold text-brand-strong tabular-nums dark:text-brand">

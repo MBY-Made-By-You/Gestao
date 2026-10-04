@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { addMonths, format, subMonths } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { addMonths, subMonths } from "date-fns";
 import { ChevronLeft, ChevronRight, Clock, Landmark, Package, TrendingDown, TrendingUp, Wallet } from "lucide-react";
 
 import { CashflowChart } from "@/components/charts/cashflow-chart";
@@ -13,7 +12,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/misc";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { requireStaff } from "@/lib/auth";
-import { formatCurrency, formatPercent, toMonthInput, todayInAppTimeZone } from "@/lib/format";
+import { formatCurrency, formatMonthYear, formatPercent, toMonthInput, todayInAppTimeZone } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getFinanceOverview } from "@/server/queries/finance";
 
@@ -22,7 +21,7 @@ export const metadata: Metadata = { title: "Financeiro" };
 export default async function FinancePage({ searchParams }: PageProps<"/finance">) {
   const [{ month: monthParam }, profile] = await Promise.all([searchParams, requireStaff()]);
   const data = await getFinanceOverview(typeof monthParam === "string" ? monthParam : undefined);
-  const monthLabel = format(data.month, "MMMM 'de' yyyy", { locale: ptBR });
+  const monthLabel = formatMonthYear(data.month);
   const prev = toMonthInput(subMonths(data.month, 1));
   const next = toMonthInput(addMonths(data.month, 1));
   const isCurrent = toMonthInput(data.month) === toMonthInput(todayInAppTimeZone());
@@ -47,7 +46,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
                   <ChevronLeft />
                 </Link>
               </Button>
-              <span className="min-w-36 text-center text-sm font-bold capitalize">{monthLabel}</span>
+              <span className="min-w-36 text-center text-sm font-bold">{monthLabel}</span>
               <Button asChild variant="ghost" size="icon-sm" aria-label="Próximo mês">
                 <Link href={`/finance?month=${next}`}>
                   <ChevronRight />
@@ -87,7 +86,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
         />
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[1fr_380px]">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardHeader>
             <CardTitle>Histórico de 12 meses</CardTitle>
@@ -101,7 +100,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
         <Card>
           <CardHeader>
             <CardTitle>Despesas por categoria</CardTitle>
-            <CardDescription className="capitalize">{monthLabel}</CardDescription>
+            <CardDescription>{monthLabel}</CardDescription>
           </CardHeader>
           <CardContent>
             {data.byCategory.length ? (
@@ -133,7 +132,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-base font-extrabold">Lançamentos de <span className="capitalize">{monthLabel}</span></h2>
+        <h2 className="text-base font-extrabold">Lançamentos de {monthLabel.toLocaleLowerCase("pt-BR")}</h2>
         <TransactionsTable
           transactions={data.transactions}
           categories={data.categories}

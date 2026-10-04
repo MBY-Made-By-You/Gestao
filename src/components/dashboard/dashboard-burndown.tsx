@@ -24,7 +24,10 @@ export function DashboardBurndown({ projects }: { projects: DashboardProject[] }
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Select value={selectedId} onValueChange={setSelectedId}>
           <SelectTrigger size="sm" className="w-auto min-w-48" aria-label="Projeto do burn-down">
-            <SelectValue />
+            <SelectValue>
+              <span className="size-2 shrink-0 rounded-full" style={{ backgroundColor: project.color }} />
+              {project.name}
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {projects.map((p) => (

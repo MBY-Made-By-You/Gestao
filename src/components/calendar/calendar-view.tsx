@@ -8,13 +8,14 @@ import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, CircleCheck, Circle, Flag, Plus, Video } from "lucide-react";
 
 import { EventDialog, type EventDraft } from "@/components/calendar/event-dialog";
+import { ProjectFilterLabel } from "@/components/shared/project-filter-label";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/misc";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { EVENT_TYPE_LABEL, PRIORITY_STYLE } from "@/lib/constants";
-import { parseDateOnly } from "@/lib/format";
+import { capitalizeFirst, formatMonthYear, parseDateOnly } from "@/lib/format";
 import { zonedParts } from "@/lib/timezone";
 import type { EventType, MiniProfile } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -106,8 +107,8 @@ export function CalendarView({
 
   const title =
     view === "month"
-      ? format(anchorDate, "MMMM 'de' yyyy", { locale: ptBR })
-      : `${format(parseDateOnly(range.start), "dd MMM", { locale: ptBR })} – ${format(parseDateOnly(range.end), "dd MMM yyyy", { locale: ptBR })}`;
+      ? formatMonthYear(anchorDate)
+      : `${format(parseDateOnly(range.start), "dd 'de' MMM", { locale: ptBR })} – ${format(parseDateOnly(range.end), "dd 'de' MMM 'de' yyyy", { locale: ptBR })}`;
 
   const openTask = (task: CalendarTaskItem) => router.push(`/projects/${task.project.id}/board?task=${task.id}`);
   const openEvent = (event: CalendarEventItem) => setDialog({ event, draft: null });
@@ -133,13 +134,15 @@ export function CalendarView({
               </Link>
             </Button>
           </div>
-          <h2 className="text-lg font-extrabold capitalize">{title}</h2>
+          <h2 className="text-lg font-extrabold">{title}</h2>
         </div>
 
         <div className="flex flex-wrap items-center gap-3 lg:ml-auto">
           <Select value={projectFilter} onValueChange={setProjectFilter}>
-            <SelectTrigger size="sm" className="w-auto min-w-40" aria-label="Filtrar por projeto">
-              <SelectValue />
+            <SelectTrigger size="sm" className="w-full min-w-40 sm:w-auto" aria-label="Filtrar por projeto">
+              <SelectValue>
+                <ProjectFilterLabel value={projectFilter} projects={projects} />
+              </SelectValue>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Todos os projetos</SelectItem>
@@ -384,8 +387,8 @@ function MonthGrid({
                       </button>
                     </PopoverTrigger>
                     <PopoverContent className="w-64 space-y-1 p-2" onClick={(e) => e.stopPropagation()}>
-                      <p className="px-1 pb-1 text-xs font-bold capitalize">
-                        {format(date, "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                      <p className="px-1 pb-1 text-xs font-bold">
+                        {capitalizeFirst(format(date, "EEEE, dd 'de' MMMM", { locale: ptBR }))}
                       </p>
                       {all.map((item) =>
                         item.kind === "event" ? (
@@ -492,7 +495,7 @@ function WeekGrid({
       <div className="overflow-x-auto">
         <div className="min-w-[760px]">
           {/* Cabeçalho */}
-          <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b bg-muted/50">
+          <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b bg-muted/50">
             <div />
             {days.map((day) => {
               const date = parseDateOnly(day);
@@ -513,7 +516,7 @@ function WeekGrid({
           </div>
 
           {/* Dia inteiro: marcos, eventos de dia inteiro e prazos */}
-          <div className="grid grid-cols-[56px_repeat(7,1fr)] border-b">
+          <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))] border-b">
             <div className="px-1 py-2 text-right text-[10px] font-semibold text-muted-foreground">Dia todo</div>
             {days.map((day) => {
               const items = byDay.get(day) ?? { events: [], tasks: [] };
@@ -533,11 +536,14 @@ function WeekGrid({
 
           {/* Grade de horários */}
           <div className="scrollbar-thin max-h-[620px] overflow-y-auto">
-            <div className="grid grid-cols-[56px_repeat(7,1fr)]">
+            <div className="grid grid-cols-[56px_repeat(7,minmax(0,1fr))]">
               <div>
                 {hours.map((h) => (
                   <div key={h} className="relative pr-2 text-right text-[10px] font-semibold text-muted-foreground" style={{ height: HOUR_PX }}>
-                    <span className="-translate-y-1.5 inline-block">{String(h).padStart(2, "0")}:00</span>
+                    {/* o primeiro rótulo fica abaixo da linha para não ser cortado pelo topo da rolagem */}
+                    <span className={cn("inline-block", h !== hours[0] && "-translate-y-1.5")}>
+                      {String(h).padStart(2, "0")}:00
+                    </span>
                   </div>
                 ))}
               </div>

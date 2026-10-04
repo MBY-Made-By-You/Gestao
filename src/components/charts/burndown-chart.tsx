@@ -4,6 +4,7 @@ import { CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YA
 
 import { ChartLegend, ChartTooltip } from "@/components/charts/chart-tooltip";
 import type { BurndownPoint } from "@/lib/analytics/burndown";
+import { niceTicks } from "@/lib/analytics/ticks";
 import { formatNumber } from "@/lib/format";
 
 /**
@@ -21,6 +22,7 @@ export function BurndownChart({
 }) {
   const unit = metric === "points" ? "pontos" : "tarefas";
   const lastReal = [...points].reverse().find((p) => p.remaining !== null);
+  const ticks = niceTicks(Math.max(0, ...points.map((p) => Math.max(p.ideal, p.remaining ?? 0))), { integer: true });
 
   return (
     <div className="space-y-3">
@@ -43,6 +45,8 @@ export function BurndownChart({
             />
             <YAxis
               allowDecimals={false}
+              ticks={ticks}
+              domain={[0, ticks.at(-1)!]}
               tickLine={false}
               axisLine={false}
               tick={{ fill: "var(--muted-foreground)", fontSize: 11 }}

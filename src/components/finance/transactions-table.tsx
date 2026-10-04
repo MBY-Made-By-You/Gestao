@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { TransactionDialog } from "@/components/finance/transaction-dialog";
 import { EmptyState } from "@/components/brand/empty-state";
+import { ProjectFilterLabel } from "@/components/shared/project-filter-label";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -17,11 +18,17 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, plural } from "@/lib/format";
 import type { FinanceCategory, TransactionType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { deleteTransaction, markTransactionPaid } from "@/server/actions/finance";
 import type { TransactionRow } from "@/server/queries/finance";
+
+const TYPE_FILTER_LABEL: Record<"all" | TransactionType, string> = {
+  all: "Receitas e despesas",
+  income: "Somente receitas",
+  expense: "Somente despesas",
+};
 
 export function TransactionsTable({
   transactions,
@@ -79,17 +86,21 @@ export function TransactionsTable({
       <div className="flex flex-wrap items-center gap-2">
         <Select value={typeFilter} onValueChange={(v) => setTypeFilter(v as typeof typeFilter)}>
           <SelectTrigger size="sm" className="w-auto min-w-36" aria-label="Filtrar por tipo">
-            <SelectValue />
+            <SelectValue>{TYPE_FILTER_LABEL[typeFilter]}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Receitas e despesas</SelectItem>
-            <SelectItem value="income">Somente receitas</SelectItem>
-            <SelectItem value="expense">Somente despesas</SelectItem>
+            {(Object.keys(TYPE_FILTER_LABEL) as (keyof typeof TYPE_FILTER_LABEL)[]).map((key) => (
+              <SelectItem key={key} value={key}>
+                {TYPE_FILTER_LABEL[key]}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
         <Select value={projectFilter} onValueChange={setProjectFilter}>
           <SelectTrigger size="sm" className="w-auto min-w-40" aria-label="Filtrar por projeto">
-            <SelectValue />
+            <SelectValue>
+              <ProjectFilterLabel value={projectFilter} projects={projects} />
+            </SelectValue>
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos os projetos</SelectItem>
@@ -104,7 +115,7 @@ export function TransactionsTable({
           </SelectContent>
         </Select>
         <span className="text-xs text-muted-foreground">
-          {visible.length} lançamento(s) · resultado{" "}
+          {plural(visible.length, "lançamento")} · resultado{" "}
           <strong className={net >= 0 ? "text-success" : "text-destructive"}>{formatCurrency(net)}</strong>
         </span>
         <div className="ml-auto flex gap-2">
