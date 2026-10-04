@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { BurndownChart } from "@/components/charts/burndown-chart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { formatNumber } from "@/lib/format";
 import type { DashboardProject } from "@/server/queries/dashboard";
 
 /** Burn-down com seletor de projeto (sprint ativa, ou o projeto inteiro). */
@@ -42,7 +43,7 @@ export function DashboardBurndown({ projects }: { projects: DashboardProject[] }
           {burndown.label} · faltam <strong className="text-foreground">{burndown.remaining}</strong> de {burndown.total} {unit}
           {" · "}
           <span className={burndown.deltaVsIdeal >= 0 ? "font-semibold text-success" : "font-semibold text-destructive"}>
-            {burndown.deltaVsIdeal >= 0 ? "no ritmo" : `${Math.abs(burndown.deltaVsIdeal)} ${unit} atrás do ideal`}
+            {burndown.deltaVsIdeal >= 0 ? "no ritmo" : `${formatNumber(Math.abs(burndown.deltaVsIdeal))} ${unit} atrás do ideal`}
           </span>
         </p>
       </div>

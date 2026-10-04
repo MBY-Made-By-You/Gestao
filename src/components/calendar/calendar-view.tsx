@@ -573,12 +573,16 @@ function WeekGrid({
                       const color = TYPE_COLOR[event.type];
                       const start = zonedParts(event.starts_at).hm;
                       const end = event.ends_at ? zonedParts(event.ends_at).hm : null;
+                      const compact = height < 40; // eventos curtos: título e horário numa linha só
                       return (
                         <button
                           key={event.id}
                           type="button"
                           onClick={() => onOpenEvent(event)}
-                          className="absolute overflow-hidden rounded-lg border-l-[3px] px-1.5 py-1 text-left text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md"
+                          className={cn(
+                            "absolute overflow-hidden rounded-lg border-l-[3px] px-1.5 text-left text-[11px] leading-tight shadow-sm transition hover:z-10 hover:shadow-md",
+                            compact ? "flex items-center" : "py-1",
+                          )}
                           style={{
                             top,
                             height,
@@ -587,13 +591,22 @@ function WeekGrid({
                             borderColor: color,
                             backgroundColor: `color-mix(in oklab, ${color} 16%, var(--card))`,
                           }}
-                          title={event.title}
+                          title={`${event.title} · ${start}${end ? `–${end}` : ""}`}
                         >
-                          <p className="truncate font-bold">{event.title}</p>
-                          <p className="truncate text-muted-foreground tabular-nums">
-                            {start}
-                            {end ? `–${end}` : ""}
-                          </p>
+                          {compact ? (
+                            <p className="truncate">
+                              <span className="font-bold">{event.title}</span>{" "}
+                              <span className="text-muted-foreground tabular-nums">{start}</span>
+                            </p>
+                          ) : (
+                            <>
+                              <p className="truncate font-bold">{event.title}</p>
+                              <p className="truncate text-muted-foreground tabular-nums">
+                                {start}
+                                {end ? `–${end}` : ""}
+                              </p>
+                            </>
+                          )}
                         </button>
                       );
                     })}

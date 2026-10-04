@@ -130,7 +130,7 @@ export function dueLabel(due: string | null, completedAt?: string | null, today 
   const state = dueState(due, completedAt, today);
   const diff = differenceInCalendarDays(parseDateOnly(due), today);
   if (state === "today") return "Hoje";
-  if (state === "overdue") return diff === -1 ? "Ontem" : `${Math.abs(diff)} dias atrasada`;
+  if (state === "overdue") return diff === -1 ? "Venceu ontem" : `Atrasada há ${Math.abs(diff)} dias`;
   if (diff === 1) return "Amanhã";
   return formatShortDate(due);
 }

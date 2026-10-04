@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/misc";
 import { requireProfile } from "@/lib/auth";
 import { PRIORITY_STYLE } from "@/lib/constants";
-import { dueLabel, formatCurrency, formatDate, formatPercent, parseDateOnly } from "@/lib/format";
+import { dueLabel, formatCurrency, formatDate, formatNumber, formatPercent, parseDateOnly } from "@/lib/format";
 import type { TaskPriority } from "@/lib/types";
 import { cn, toNumber } from "@/lib/utils";
 import { getProjectOverview } from "@/server/queries/projects";
@@ -74,9 +74,11 @@ export default async function ProjectOverviewPage({ params }: PageProps<"/projec
             <CardTitle>Burn-down · {burndown.label}</CardTitle>
             <CardDescription>
               {formatDate(burndown.start)} → {formatDate(burndown.end)} ·{" "}
-              {burndown.deltaVsIdeal >= 0
-                ? `${burndown.deltaVsIdeal} ${burndown.metric === "points" ? "pts" : "tarefas"} à frente do ritmo ideal`
-                : `${Math.abs(burndown.deltaVsIdeal)} ${burndown.metric === "points" ? "pts" : "tarefas"} atrás do ritmo ideal`}
+              {burndown.deltaVsIdeal === 0
+                ? "no ritmo ideal"
+                : `${formatNumber(Math.abs(burndown.deltaVsIdeal))} ${burndown.metric === "points" ? "pts" : "tarefas"} ${
+                    burndown.deltaVsIdeal > 0 ? "à frente do" : "atrás do"
+                  } ritmo ideal`}
             </CardDescription>
           </CardHeader>
           <CardContent>

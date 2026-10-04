@@ -41,6 +41,20 @@ atual, resultado do mês e receitas × despesas dos últimos meses.
 Tudo em português, com tema claro/escuro, layout responsivo e horários no fuso de
 Brasília.
 
+## Telas
+
+<sub>Capturas com dados de demonstração.</sub>
+
+| Dashboard | Quadro Kanban |
+| --- | --- |
+| ![Dashboard com burn-down, urgentes da semana, saldo e receitas x despesas](docs/screenshots/dashboard.webp) | ![Quadro Kanban com etiquetas, prazos, pontos e responsáveis](docs/screenshots/quadro.webp) |
+| **Tarefa com comprovação de conclusão** | **Financeiro** |
+| ![Painel da tarefa com anexo de imagem marcado como comprovação](docs/screenshots/tarefa.webp) | ![Financeiro com histórico de 12 meses, lançamentos e custos por projeto](docs/screenshots/financeiro.webp) |
+| **Calendário semanal** | **Equipe e gamificação** |
+| ![Calendário semanal com prazos, reuniões e marco de entrega](docs/screenshots/calendario.webp) | ![Equipe com ranking de XP, níveis e conquistas](docs/screenshots/equipe.webp) |
+| **Tema escuro** | **Celular** |
+| ![Quadro Kanban no tema escuro](docs/screenshots/quadro-escuro.webp) | <img src="docs/screenshots/mobile.webp" alt="Dashboard no celular" width="260"> |
+
 ## Como rodar localmente
 
 Pré-requisitos: **Node.js 20.9+** e npm.
