@@ -1,0 +1,253 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* =============================================================================
+   MBY — Made By You · Design tokens
+   Azul MβY (#0399FB) sobre branco-azulado (claro) ou preto profundo (escuro),
+   com o lilás-pastel do moletom da capivara como cor secundária.
+   ========================================================================== */
+:root {
+  --radius: 0.875rem;
+
+  --brand: #0399fb;
+  --brand-strong: #0077d6;
+  --brand-soft: #e6f3ff;
+  --periwinkle: #99b1ef;
+
+  --background: #f4f8fe;
+  --foreground: #0b1a33;
+  --card: #ffffff;
+  --card-foreground: #0b1a33;
+  --popover: #ffffff;
+  --popover-foreground: #0b1a33;
+  --primary: #0a8bea;
+  --primary-foreground: #ffffff;
+  --secondary: #e9f0fc;
+  --secondary-foreground: #14284b;
+  --muted: #eef3fa;
+  --muted-foreground: #5b6b85;
+  --accent: #e4effd;
+  --accent-foreground: #0b1a33;
+  --destructive: #dc3d43;
+  --destructive-foreground: #ffffff;
+  --success: #0f9f5a;
+  --warning: #d98b00;
+  --border: #dbe5f3;
+  --input: #d2deee;
+  --ring: #0399fb;
+
+  /* Gráficos (validados para daltonismo e contraste — ver docs/ARQUITETURA.md) */
+  --chart-1: #0a8bea;
+  --chart-2: #eb6834;
+  --chart-3: #8b7fe8;
+  --chart-neutral: #94a3b8;
+  --chart-grid: #e6edf6;
+
+  /* Status (sempre acompanhados de ícone + rótulo) */
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #0b1a33;
+  --sidebar-primary: #0399fb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eaf3fe;
+  --sidebar-accent-foreground: #0b1a33;
+  --sidebar-border: #e3eaf5;
+  --sidebar-ring: #0399fb;
+
+  --shadow-card: 0 1px 2px rgb(11 26 51 / 0.04), 0 8px 24px -12px rgb(11 26 51 / 0.12);
+  --shadow-lift: 0 2px 4px rgb(11 26 51 / 0.06), 0 18px 36px -14px rgb(3 153 251 / 0.28);
+  --app-glow-1: rgb(3 153 251 / 0.14);
+  --app-glow-2: rgb(153 177 239 / 0.22);
+}
+
+.dark {
+  --brand: #22a6ff;
+  --brand-strong: #5bbcff;
+  --brand-soft: #0b2440;
+  --periwinkle: #8fa6e8;
+
+  --background: #05070b;
+  --foreground: #e8eef8;
+  --card: #0b111c;
+  --card-foreground: #e8eef8;
+  --popover: #0d1420;
+  --popover-foreground: #e8eef8;
+  --primary: #22a6ff;
+  --primary-foreground: #021526;
+  --secondary: #121c2e;
+  --secondary-foreground: #dbe6f7;
+  --muted: #111a29;
+  --muted-foreground: #8d9db6;
+  --accent: #13213a;
+  --accent-foreground: #e8eef8;
+  --destructive: #f0565c;
+  --destructive-foreground: #1a0405;
+  --success: #34c27a;
+  --warning: #f5b335;
+  --border: #1b2638;
+  --input: #223049;
+  --ring: #22a6ff;
+
+  --chart-1: #1c8fe6;
+  --chart-2: #d95926;
+  --chart-3: #9085e9;
+  --chart-neutral: #5b6b85;
+  --chart-grid: #172235;
+
+  --sidebar: #070b12;
+  --sidebar-foreground: #dfe7f4;
+  --sidebar-primary: #22a6ff;
+  --sidebar-primary-foreground: #021526;
+  --sidebar-accent: #101b2e;
+  --sidebar-accent-foreground: #e8eef8;
+  --sidebar-border: #141e2f;
+  --sidebar-ring: #22a6ff;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.4), 0 10px 30px -14px rgb(0 0 0 / 0.7);
+  --shadow-lift: 0 2px 6px rgb(0 0 0 / 0.5), 0 18px 40px -16px rgb(34 166 255 / 0.35);
+  --app-glow-1: rgb(34 166 255 / 0.13);
+  --app-glow-2: rgb(110 120 255 / 0.08);
+}
+
+@theme inline {
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
+
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 4px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 10px);
+
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-periwinkle: var(--periwinkle);
+
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-neutral: var(--chart-neutral);
+  --color-chart-grid: var(--chart-grid);
+  --color-status-good: var(--status-good);
+  --color-status-warning: var(--status-warning);
+  --color-status-serious: var(--status-serious);
+  --color-status-critical: var(--status-critical);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --shadow-card: var(--shadow-card);
+  --shadow-lift: var(--shadow-lift);
+
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.2s linear infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01", "cv11";
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--brand) 30%, transparent);
+  }
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    opacity: 0.6;
+  }
+  .dark input[type="date"]::-webkit-calendar-picker-indicator,
+  .dark input[type="time"]::-webkit-calendar-picker-indicator,
+  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+  }
+}
+
+@layer components {
+  /* Fundo do app: brilho azul suave, como a luz da cena da capivara. */
+  .bg-app {
+    background-color: var(--background);
+    background-image:
+      radial-gradient(60rem 40rem at 100% -10%, var(--app-glow-1), transparent 60%),
+      radial-gradient(50rem 36rem at -10% 110%, var(--app-glow-2), transparent 60%);
+    background-attachment: fixed;
+  }
+  .text-gradient-brand {
+    background-image: linear-gradient(100deg, var(--brand) 0%, var(--periwinkle) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .surface-glass {
+    background-color: color-mix(in oklab, var(--card) 78%, transparent);
+    backdrop-filter: blur(14px) saturate(1.4);
+  }
+  .skeleton-shimmer {
+    background-image: linear-gradient(90deg, transparent 0%, color-mix(in oklab, var(--foreground) 6%, transparent) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--muted-foreground) 35%, transparent) transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
