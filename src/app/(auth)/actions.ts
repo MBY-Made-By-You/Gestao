@@ -1,10 +1,10 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createClient } from "@/lib/supabase/server";
+import { getSiteOrigin } from "@/server/site-origin";
 
 export type AuthFormState = { error?: string; message?: string; email?: string } | undefined;
 
@@ -56,8 +56,7 @@ export async function signUp(_prev: AuthFormState, formData: FormData): Promise<
   const email = String(formData.get("email") ?? "");
   if (!parsed.success) return { error: parsed.error.issues[0]?.message, email };
 
-  const origin =
-    process.env.NEXT_PUBLIC_SITE_URL ?? (await headers()).get("origin") ?? "http://localhost:3000";
+  const origin = await getSiteOrigin();
 
   const supabase = await createClient();
   const { data, error } = await supabase.auth.signUp({

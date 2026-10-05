@@ -46,6 +46,25 @@ export async function updateSession(request: NextRequest) {
     return redirect;
   };
 
+  // Links de e-mail do Supabase que caíram fora de /auth/callback — acontece
+  // quando o Supabase volta para a "Site URL" (raiz) em vez do redirect pedido.
+  if (!matches(pathname, ["/auth"])) {
+    const params = request.nextUrl.searchParams;
+    if (params.has("code") || params.has("token_hash")) {
+      const url = request.nextUrl.clone();
+      url.pathname = "/auth/callback";
+      return redirectTo(url);
+    }
+    const linkError = params.get("error_code") ?? (params.has("error_description") ? "link_invalido" : null);
+    if (linkError) {
+      const url = request.nextUrl.clone();
+      url.pathname = isAuthenticated ? "/dashboard" : "/login";
+      url.search = "";
+      if (!isAuthenticated) url.searchParams.set("erro", linkError);
+      return redirectTo(url);
+    }
+  }
+
   if (!isAuthenticated && !matches(pathname, PUBLIC_PATHS)) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";

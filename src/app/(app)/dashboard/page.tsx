@@ -237,6 +237,7 @@ export default async function DashboardPage() {
             ) : (
               <EmptyState
                 compact
+                icon={FolderKanban}
                 title="Nenhum projeto ativo"
                 action={
                   profile.isStaff ? (

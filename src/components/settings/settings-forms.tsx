@@ -5,11 +5,12 @@ import { useRouter } from "next/navigation";
 import { Camera, KeyRound, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
+import { AvatarCropper } from "@/components/settings/avatar-cropper";
 import { UserAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { prepareImageForUpload, validateImageFile } from "@/lib/storage/images";
+import { validateImageFile } from "@/lib/storage/images";
 import { createClient } from "@/lib/supabase/client";
 import type { Profile } from "@/lib/types";
 import { errorMessage } from "@/lib/utils";
@@ -21,23 +22,28 @@ export function ProfileForm({ profile }: { profile: Profile }) {
   const [jobTitle, setJobTitle] = useState(profile.job_title ?? "");
   const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url);
   const [uploading, setUploading] = useState(false);
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const [pending, startTransition] = useTransition();
   const fileInput = useRef<HTMLInputElement>(null);
 
-  async function uploadAvatar(file: File) {
+  /** Escolheu um arquivo: valida e abre o recorte (zoom/posição) antes de enviar. */
+  function pickAvatar(file: File) {
     const invalid = validateImageFile(file);
     if (invalid || file.type === "image/gif" || file.type === "image/avif") {
       toast.error(invalid?.message ?? "Use PNG, JPG ou WebP para a foto.");
       return;
     }
+    setCropFile(file);
+  }
+
+  async function uploadAvatar(blob: Blob) {
     setUploading(true);
     try {
       const supabase = createClient();
-      const prepared = await prepareImageForUpload(file, { maxDimension: 512, quality: 0.86, skipBelowBytes: 0 });
-      const ext = prepared.type === "image/webp" ? "webp" : prepared.type === "image/png" ? "png" : "jpg";
+      const ext = blob.type === "image/webp" ? "webp" : "jpg";
       const path = `${profile.id}/avatar-${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from("avatars").upload(path, prepared.blob, {
-        contentType: prepared.type,
+      const { error } = await supabase.storage.from("avatars").upload(path, blob, {
+        contentType: blob.type,
         cacheControl: "31536000",
       });
       if (error) throw error;
@@ -51,6 +57,7 @@ export function ProfileForm({ profile }: { profile: Profile }) {
       const result = await updateOwnProfile({ full_name: fullName, job_title: jobTitle || null, avatar_url: data.publicUrl });
       if (!result.ok) throw new Error(result.error);
       setAvatarUrl(data.publicUrl);
+      setCropFile(null);
       toast.success("Foto atualizada");
       router.refresh();
     } catch (error) {
@@ -93,15 +100,16 @@ export function ProfileForm({ profile }: { profile: Profile }) {
             hidden
             onChange={(e) => {
               const file = e.target.files?.[0];
-              if (file) void uploadAvatar(file);
+              if (file) pickAvatar(file);
               e.target.value = "";
             }}
           />
         </div>
         <div className="text-sm text-muted-foreground">
           <p className="font-semibold text-foreground">Foto de perfil</p>
-          <p>PNG, JPG ou WebP — redimensionada para 512px.</p>
+          <p>PNG, JPG ou WebP — você ajusta o enquadramento antes de salvar.</p>
         </div>
+        <AvatarCropper file={cropFile} onCancel={() => setCropFile(null)} onConfirm={uploadAvatar} />
       </div>
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">

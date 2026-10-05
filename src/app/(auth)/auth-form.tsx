@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import Link from "next/link";
-import { AlertTriangle, Eye, EyeOff, Loader2, MailCheck } from "lucide-react";
+import { AlertTriangle, Eye, EyeOff, Info, Loader2, MailCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 
 import { signIn, signUp, type AuthFormState } from "./actions";
 
-export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: string }) {
+export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; next?: string; notice?: string }) {
   const [state, formAction, pending] = useActionState<AuthFormState, FormData>(
     mode === "login" ? signIn : signUp,
     undefined,
@@ -30,6 +30,13 @@ export function AuthForm({ mode, next }: { mode: "login" | "signup"; next?: stri
             : "O primeiro cadastro vira administrador; os próximos entram como visualizadores até um admin promovê-los."}
         </p>
       </div>
+
+      {notice && !state?.message ? (
+        <div role="status" className="flex gap-3 rounded-xl border border-brand/30 bg-brand-soft/60 p-3 text-sm">
+          <Info className="mt-0.5 size-4 shrink-0 text-brand-strong dark:text-brand" />
+          <p>{notice}</p>
+        </div>
+      ) : null}
 
       {state?.message ? (
         <div className="flex gap-3 rounded-xl border border-success/30 bg-success/10 p-3 text-sm">

@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient as createAdminClient } from "@supabase/supabase-js";
-import { headers } from "next/headers";
 import { refresh, revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -9,6 +8,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { SUPABASE_URL } from "@/lib/supabase/env";
 import type { ActionResult, AppRole } from "@/lib/types";
 import { failure, getActionContext } from "@/server/action-context";
+import { getSiteOrigin } from "@/server/site-origin";
 
 const uuid = z.uuid();
 
@@ -68,7 +68,7 @@ export async function inviteMember(email: string, fullName: string, role: AppRol
   const admin = createAdminClient<Database>(SUPABASE_URL, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const origin = process.env.NEXT_PUBLIC_SITE_URL ?? (await headers()).get("origin") ?? "http://localhost:3000";
+  const origin = await getSiteOrigin();
   const { data, error } = await admin.auth.admin.inviteUserByEmail(parsed.data.email, {
     data: { full_name: parsed.data.fullName },
     redirectTo: `${origin}/auth/callback`,

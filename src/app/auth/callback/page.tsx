@@ -6,6 +6,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { Loader2 } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
+import { describeAuthLinkError } from "@/lib/auth-link-errors";
 import { createClient } from "@/lib/supabase/client";
 
 /**
@@ -30,9 +31,10 @@ function CallbackHandler() {
       const tokenHash = params.get("token_hash");
       const type = params.get("type") as EmailOtpType | null;
       const hash = new URLSearchParams(window.location.hash.slice(1));
-      const errorDescription = params.get("error_description") ?? hash.get("error_description");
+      const linkError =
+        params.get("error_code") ?? hash.get("error_code") ?? params.get("error_description") ?? hash.get("error_description");
 
-      if (errorDescription) throw new Error(errorDescription);
+      if (linkError) throw new Error(linkError);
       if (code) {
         const { error } = await supabase.auth.exchangeCodeForSession(code);
         if (error) throw error;
@@ -53,7 +55,7 @@ function CallbackHandler() {
     }
 
     run().catch((e: unknown) => {
-      setError(e instanceof Error ? e.message : "Não foi possível validar o link.");
+      setError(describeAuthLinkError(e instanceof Error ? e.message : ""));
     });
   }, [params, router]);
 
@@ -62,10 +64,13 @@ function CallbackHandler() {
       <Logo className="h-14" priority />
       {error ? (
         <>
-          <p className="text-base font-bold">Link inválido ou expirado</p>
+          <p className="text-base font-bold">Não deu para entrar pelo link</p>
           <p className="max-w-xs text-sm text-muted-foreground">{error}</p>
-          <a href="/login" className="text-sm font-semibold text-brand-strong hover:underline dark:text-brand">
-            Voltar ao login
+          <a
+            href="/login"
+            className="rounded-xl bg-brand px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:brightness-105"
+          >
+            Ir para o login
           </a>
         </>
       ) : (

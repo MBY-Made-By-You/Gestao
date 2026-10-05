@@ -75,7 +75,7 @@ página **Equipe**.
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | sim | URL do projeto Supabase |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | sim | Chave publicável (pode ir ao navegador; os dados são protegidos pela RLS). `NEXT_PUBLIC_SUPABASE_ANON_KEY` também é aceita |
-| `NEXT_PUBLIC_SITE_URL` | recomendada | URL pública do app, usada nos links de confirmação e convite |
+| `NEXT_PUBLIC_SITE_URL` | não | Reserva para a URL pública. Os links de e-mail usam o endereço de onde a pessoa acessou |
 | `SUPABASE_SERVICE_ROLE_KEY` | não | Só no servidor. Habilita “convidar por e-mail” na página Equipe. **Nunca faça commit dela** |
 
 ### Scripts
@@ -100,9 +100,9 @@ arquivo no SQL Editor — e atualize as variáveis de ambiente.
 
 Configurações recomendadas no painel do Supabase (**Authentication**):
 
-1. **URL Configuration** → *Site URL*: a URL do app (ex.: `https://mby-gestao.vercel.app`).
-   *Redirect URLs*: `http://localhost:3000/auth/callback` e
-   `https://<seu-domínio>/auth/callback`.
+1. **URL Configuration** → *Site URL*: `https://made-by-you-gestao.vercel.app`.
+   *Redirect URLs*: `https://made-by-you-gestao.vercel.app/**` e `http://localhost:3000/**`.
+   Sem isso, o Supabase manda o link de confirmação para `localhost:3000`.
 2. **Confirmação de e-mail**: o envio de e-mails embutido do Supabase tem limite
    baixo por hora. Para produção, configure um SMTP próprio; para uma equipe
    interna, também é possível desativar *Confirm email*.
@@ -121,7 +121,7 @@ npx supabase gen types typescript --project-id eepinznppxessntniukf > src/lib/su
 1. Importe este repositório na Vercel (o framework Next.js é detectado
    automaticamente).
 2. Em *Settings → Environment Variables*, cadastre as variáveis da tabela acima
-   (com `NEXT_PUBLIC_SITE_URL` igual à URL de produção).
+   (a integração Supabase ↔ Vercel já cria as do Supabase).
 3. Adicione `https://<seu-domínio>/auth/callback` às *Redirect URLs* do Supabase.
 
 ## Estrutura
