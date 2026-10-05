@@ -110,7 +110,7 @@ export default async function MemberPage({ params }: PageProps<"/team/[userId]">
         <StatTile label="Em aberto" value={stats.open_tasks ?? 0} icon={ListTodo} tone="neutral" />
       </section>
 
-      <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="space-y-5">
           <Card>
             <CardHeader>
@@ -149,7 +149,7 @@ export default async function MemberPage({ params }: PageProps<"/team/[userId]">
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground">Nenhuma tarefa em aberto. 🎉</p>
+                <p className="text-sm text-muted-foreground">Nenhuma tarefa em aberto.</p>
               )}
             </CardContent>
           </Card>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
+  CalendarCheck,
   CalendarDays,
   CircleDollarSign,
   Crown,
@@ -56,7 +57,7 @@ export default async function DashboardPage() {
             {formatDate(todayInAppTimeZone(), "EEEE, dd 'de' MMMM")}
           </p>
           <h1 className="text-2xl font-extrabold tracking-tight sm:text-3xl">
-            {greeting()}, {firstName}! 👋
+            {greeting()}, {firstName}!
           </h1>
           <p className="text-sm text-muted-foreground">
             {data.urgentTasks.length
@@ -128,7 +129,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* Burn-down + urgentes ------------------------------------------------- */}
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardHeader>
             <CardTitle>Burn-down</CardTitle>
@@ -184,7 +185,7 @@ export default async function DashboardPage() {
                 })}
               </ul>
             ) : (
-              <EmptyState compact title="Semana tranquila" description="Nenhuma tarefa urgente por aqui." />
+              <EmptyState compact icon={CalendarCheck} title="Semana tranquila" description="Nenhuma tarefa urgente por aqui." />
             )}
           </CardContent>
         </Card>

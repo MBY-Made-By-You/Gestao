@@ -22,7 +22,7 @@ export function AuthForm({ mode, next, notice }: { mode: "login" | "signup"; nex
     <div className="space-y-7">
       <div className="space-y-1.5">
         <h2 className="text-2xl font-extrabold tracking-tight">
-          {isLogin ? "Bem-vindo de volta 👋" : "Crie sua conta"}
+          {isLogin ? "Bem-vindo de volta" : "Crie sua conta"}
         </h2>
         <p className="text-sm text-muted-foreground">
           {isLogin

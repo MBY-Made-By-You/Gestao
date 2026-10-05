@@ -86,7 +86,7 @@ export default async function FinancePage({ searchParams }: PageProps<"/finance"
         />
       </section>
 
-      <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
+      <section className="grid grid-cols-1 gap-5 xl:grid-cols-[minmax(0,1fr)_380px]">
         <Card>
           <CardHeader>
             <CardTitle>Histórico de 12 meses</CardTitle>

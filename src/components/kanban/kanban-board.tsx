@@ -365,7 +365,7 @@ export function KanbanBoard({
     if (!original.completed_at && saved.completed_at) {
       const who = saved.assignee?.full_name?.split(" ")[0];
       toast.success(
-        who ? `Tarefa concluída! +${xpWithBonus(saved)} XP para ${who} 🎉` : "Tarefa concluída! Defina um responsável para ganhar XP.",
+        who ? `Tarefa concluída! +${xpWithBonus(saved)} XP para ${who}` : "Tarefa concluída! Defina um responsável para ganhar XP.",
       );
     }
     const count = (optimistic.tasksByColumn[placement.columnId] ?? []).length;

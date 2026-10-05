@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { CalendarDays, SquareKanban, Trophy, Wallet } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
@@ -36,7 +35,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        <div className="relative mx-auto grid w-full max-w-xl items-center gap-10 xl:grid-cols-[1fr_auto]">
+        <div className="relative mx-auto w-full max-w-xl">
           <div className="space-y-6">
             <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight xl:text-5xl">
               Seu time, seus projetos,{" "}
@@ -57,17 +56,6 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 </li>
               ))}
             </ul>
-          </div>
-          <div className="relative hidden xl:block">
-            <div className="absolute inset-0 -z-10 scale-110 rounded-full bg-[#0399fb]/40 blur-3xl" />
-            <Image
-              src="/brand/capivara.webp"
-              alt="Capivara mascote da MBY trabalhando no notebook"
-              width={640}
-              height={640}
-              priority
-              className="size-56 animate-float rounded-[2rem] object-cover shadow-2xl ring-1 ring-white/15"
-            />
           </div>
         </div>
 

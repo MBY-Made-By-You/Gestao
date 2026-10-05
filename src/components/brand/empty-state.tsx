@@ -1,16 +1,15 @@
-import Image from "next/image";
-import type { LucideIcon } from "lucide-react";
+import { Inbox, type LucideIcon } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-/** Estado vazio com a capivara mascote da MBY (ou um ícone, quando `icon` é informado). */
+/** Estado vazio: ícone, título, descrição e ação opcional. */
 export function EmptyState({
   title,
   description,
   action,
   className,
   compact,
-  icon: Icon,
+  icon: Icon = Inbox,
 }: {
   title: string;
   description?: React.ReactNode;
@@ -27,25 +26,14 @@ export function EmptyState({
         className,
       )}
     >
-      {Icon ? (
-        <div className="grid size-12 place-items-center rounded-2xl bg-brand-soft text-brand-strong dark:text-brand">
-          <Icon className="size-6" />
-        </div>
-      ) : (
-      <div className="relative">
-        <div className="absolute inset-0 -z-10 rounded-full bg-brand/25 blur-2xl" />
-        <Image
-          src="/brand/capivara-sm.webp"
-          alt="Capivara MBY"
-          width={320}
-          height={320}
-          className={cn(
-            "rounded-full border-4 border-card object-cover shadow-lift",
-            compact ? "size-20" : "size-28",
-          )}
-        />
+      <div
+        className={cn(
+          "grid place-items-center rounded-2xl bg-brand-soft text-brand-strong dark:text-brand",
+          compact ? "size-12" : "size-14",
+        )}
+      >
+        <Icon className={compact ? "size-6" : "size-7"} />
       </div>
-      )}
       <div className="max-w-sm space-y-1">
         <p className="text-[15px] font-bold">{title}</p>
         {description ? <p className="text-sm text-muted-foreground">{description}</p> : null}

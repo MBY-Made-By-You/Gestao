@@ -46,7 +46,7 @@ export default async function ResourcesPage() {
         <StatTile label="Consumo no mês" value={formatCurrency(data.monthConsumption)} icon={PackageMinus} tone="brand" />
       </section>
 
-      <div className="grid gap-5 2xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid grid-cols-1 gap-5 2xl:grid-cols-[minmax(0,1fr)_320px]">
         <ResourcesView
           resources={data.resources}
           movements={data.movements}

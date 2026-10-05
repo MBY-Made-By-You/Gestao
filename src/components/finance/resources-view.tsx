@@ -7,6 +7,7 @@ import {
   ArrowUpFromLine,
   Loader2,
   MoreHorizontal,
+  Package,
   Pencil,
   Plus,
   Trash2,
@@ -82,6 +83,7 @@ export function ResourcesView({
         {resources.length === 0 ? (
           <EmptyState
             compact
+            icon={Package}
             title="Nenhum insumo cadastrado"
             description="Cadastre materiais e componentes (ex.: Arduino, filamento PLA, sensores) para controlar estoque e custos por projeto."
           />

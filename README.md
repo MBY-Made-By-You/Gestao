@@ -41,6 +41,9 @@ atual, resultado do mês e receitas × despesas dos últimos meses.
 Tudo em português, com tema claro/escuro, layout responsivo e horários no fuso de
 Brasília.
 
+**App instalável (PWA)** — no celular, use “Adicionar à tela inicial” (Android/Chrome
+ou Safari no iPhone) para abrir o Gestão como um app, em tela cheia e com ícone próprio.
+
 ## Telas
 
 <sub>Capturas com dados de demonstração.</sub>

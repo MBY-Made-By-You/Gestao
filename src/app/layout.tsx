@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Plus_Jakarta_Sans } from "next/font/google";
 
+import { PwaRegister } from "@/components/pwa-register";
 import { Providers } from "@/components/providers";
 import { APP_NAME, APP_TAGLINE } from "@/lib/constants";
 
@@ -30,6 +31,8 @@ export const metadata: Metadata = {
   title: { default: APP_NAME, template: `%s · ${APP_NAME}` },
   description: APP_TAGLINE,
   applicationName: APP_NAME,
+  appleWebApp: { capable: true, title: "Gestão", statusBarStyle: "black-translucent" },
+  formatDetection: { telephone: false },
   openGraph: { title: APP_NAME, description: APP_TAGLINE, locale: "pt_BR", type: "website" },
 };
 
@@ -38,6 +41,7 @@ export const viewport: Viewport = {
     { media: "(prefers-color-scheme: light)", color: "#f4f8fe" },
     { media: "(prefers-color-scheme: dark)", color: "#05070b" },
   ],
+  viewportFit: "cover",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
@@ -45,6 +49,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${jakarta.variable} ${geistMono.variable} font-sans`}>
         <Providers>{children}</Providers>
+        <PwaRegister />
       </body>
     </html>
   );

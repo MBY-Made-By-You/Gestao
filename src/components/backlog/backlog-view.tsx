@@ -6,6 +6,7 @@ import {
   ArrowRightToLine,
   CalendarRange,
   CheckCheck,
+  ListTodo,
   Loader2,
   MoreHorizontal,
   Pencil,
@@ -170,7 +171,7 @@ export function BacklogView({
         toast.success(
           result.data!.carriedOver
             ? `Sprint concluída. ${plural(result.data!.carriedOver, "tarefa não concluída ficou", "tarefas não concluídas ficaram")} sem sprint.`
-            : "Sprint concluída. Tudo entregue! 🎉",
+            : "Sprint concluída. Tudo entregue!",
         );
       } else {
         const result = await deleteSprint(sprint.id);
@@ -351,6 +352,7 @@ export function BacklogView({
         {tasks.length === 0 ? (
           <EmptyState
             compact
+            icon={ListTodo}
             title="Backlog vazio"
             description="Ideias e tarefas futuras ficam aqui até entrarem em uma sprint ou no quadro."
             action={canEdit ? <Button size="sm" onClick={() => setCreateOpen(true)}>Adicionar ao backlog</Button> : null}

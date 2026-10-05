@@ -1,7 +1,15 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
-import { CheckCircle2, Clock, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  MoreHorizontal,
+  Pencil,
+  Plus,
+  Receipt,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { TransactionDialog } from "@/components/finance/transaction-dialog";
@@ -129,7 +137,7 @@ export function TransactionsTable({
       </div>
 
       {visible.length === 0 ? (
-        <EmptyState compact title="Nenhum lançamento neste mês" description="Registre receitas e despesas para acompanhar o caixa." />
+        <EmptyState compact icon={Receipt} title="Nenhum lançamento neste mês" description="Registre receitas e despesas para acompanhar o caixa." />
       ) : (
         <div className="overflow-hidden rounded-2xl border bg-card shadow-card">
           <Table>

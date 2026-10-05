@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Plus } from "lucide-react";
+import { FolderKanban, Plus } from "lucide-react";
 
 import { EmptyState } from "@/components/brand/empty-state";
 import { PageHeader } from "@/components/layout/page-header";
@@ -60,6 +60,7 @@ export default async function ProjectsPage({ searchParams }: PageProps<"/project
 
       {projects.length === 0 ? (
         <EmptyState
+          icon={FolderKanban}
           title={filter === "active" ? "Nenhum projeto em andamento" : "Nada por aqui"}
           description={
             profile.isStaff
