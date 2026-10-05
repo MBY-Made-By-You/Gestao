@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CalendarDays, SquareKanban, Trophy, Wallet } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
@@ -35,7 +36,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           </div>
         </div>
 
-        <div className="relative mx-auto w-full max-w-xl">
+        <div className="relative mx-auto flex w-full max-w-xl flex-col gap-10 xl:flex-row xl:items-center">
           <div className="space-y-6">
             <h1 className="text-4xl leading-[1.1] font-extrabold tracking-tight xl:text-5xl">
               Seu time, seus projetos,{" "}
@@ -57,6 +58,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               ))}
             </ul>
           </div>
+          <FloatingCapybara className="size-40 self-center xl:size-52" />
         </div>
 
         <p className="relative text-xs text-white/40">© {new Date().getFullYear()} MBY — Made By You</p>
@@ -71,10 +73,28 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <p className="text-base font-extrabold">Gestão</p>
               <p className="text-xs text-muted-foreground">Made By You</p>
             </div>
+            <FloatingCapybara className="ml-auto size-16" />
           </div>
           {children}
         </div>
       </main>
+    </div>
+  );
+}
+
+/** Capivara mascote em corte circular, flutuando devagar. */
+function FloatingCapybara({ className }: { className?: string }) {
+  return (
+    <div className={`relative shrink-0 animate-float ${className ?? ""}`}>
+      <div className="absolute inset-0 -z-10 scale-110 rounded-full bg-[#0399fb]/40 blur-2xl" />
+      <Image
+        src="/brand/capivara.webp"
+        alt="Capivara mascote da MBY trabalhando no notebook"
+        width={640}
+        height={640}
+        priority
+        className="size-full rounded-full object-cover shadow-2xl ring-4 ring-white/15"
+      />
     </div>
   );
 }
