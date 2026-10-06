@@ -36,6 +36,9 @@ shadcn/ui e Supabase (Postgres, Auth, Storage e Realtime).
 eventos e marcos de entrega. Cada evento tem uma **ata** (o que foi discutido,
 decisões, aprendizados e próximos passos), e a página **Atas** reúne todas com busca.
 
+**Notificações** — sininho no app e push no navegador/PWA (mesmo com o app fechado):
+tarefas atribuídas, convites, atas, XP ganho e lembretes diários de prazos e eventos.
+
 **Dashboard** — burn-down dos projetos ativos, tarefas urgentes da semana, saldo
 atual, resultado do mês e receitas × despesas dos últimos meses.
 

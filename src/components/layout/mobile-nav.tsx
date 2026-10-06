@@ -6,6 +6,7 @@ import { Menu } from "lucide-react";
 
 import { Logo } from "@/components/brand/logo";
 import { SidebarContent, type SidebarProject, type SidebarUser } from "@/components/layout/app-sidebar";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 
@@ -20,6 +21,7 @@ export function MobileNav({ user, projects }: { user: SidebarUser; projects: Sid
         <Logo className="h-7" />
         <span className="text-sm font-extrabold">Gestão</span>
       </Link>
+      <NotificationBell className="ml-auto" align="end" />
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="left" className="w-[290px] bg-sidebar p-0" showCloseButton={false}>
           <SheetTitle className="sr-only">Menu</SheetTitle>

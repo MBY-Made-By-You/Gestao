@@ -58,6 +58,7 @@ Migrations em [`supabase/migrations`](../supabase/migrations), aplicadas em orde
 | `…_realtime_seed.sql` | Publicação do Realtime e categorias financeiras iniciais |
 | `…_event_minutes.sql` | Atas de eventos/reuniões (`event_minutes`, 1:1 com `events`) e sua RLS |
 | `…_task_assignees.sql` | Vários responsáveis por tarefa (`task_assignees`) e XP para cada um |
+| `…_notifications.sql` | Notificações (`notifications`, `push_subscriptions`), gatilhos que as criam, envio de Web Push via `pg_net` e lembretes diários via `pg_cron` |
 
 ### 2.1 Diagrama entidade-relacionamento
 
@@ -433,3 +434,21 @@ Detalhes:
   sprint, financeiro, insumos (incluindo bloqueio de estoque insuficiente),
   calendário mensal/semanal, dashboard, equipe, tema escuro, restrições do
   visualizador e layout mobile.
+
+## Notificações
+
+- **No app**: tabela `notifications` (uma linha por aviso, escrita só por gatilhos)
+  e sininho com contador; novas chegam pelo Supabase Realtime e aparecem como toast.
+- **Eventos que notificam**: virar responsável de uma tarefa, convite para evento,
+  ata registrada (participantes), XP ganho, entrada num projeto e, todo dia às
+  07:50 (Brasília, `pg_cron`), prazos que vencem hoje e eventos do dia. Ninguém é
+  notificado pelo que ele mesmo fez.
+- **Push (navegador e PWA)**: o navegador se inscreve com a chave VAPID pública
+  (`save_push_subscription`). Cada notificação nova dispara, pelo `pg_net`, um POST
+  para `/api/push` com o segredo `x-push-secret`; a rota assina e envia o Web Push
+  (`web-push`) e remove inscrições expiradas (`prune_push_subscriptions`). O service
+  worker mostra o aviso e, ao tocar, abre o app na página certa.
+- **Configuração**: na Vercel, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`,
+  `PUSH_WEBHOOK_SECRET` (e opcionalmente `VAPID_SUBJECT`); no Vault do Supabase,
+  `app_url` e `push_webhook_secret` (o mesmo segredo). No iPhone, o push só funciona
+  com o app instalado na Tela de Início (iOS 16.4+).

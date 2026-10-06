@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
-import { ShieldCheck } from "lucide-react";
+import { Bell, ShieldCheck } from "lucide-react";
 
 import { PageHeader } from "@/components/layout/page-header";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { PushSettings } from "@/components/notifications/push-settings";
 import { PasswordForm, ProfileForm } from "@/components/settings/settings-forms";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { requireProfile } from "@/lib/auth";
@@ -34,6 +35,20 @@ export default async function SettingsPage({ searchParams }: PageProps<"/setting
         </CardHeader>
         <CardContent>
           <PasswordForm highlight={senha === "1"} />
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Bell className="size-4 text-brand" /> Notificações
+          </CardTitle>
+          <CardDescription>
+            Tarefas atribuídas a você, convites, atas, XP ganho e lembretes de prazo e de eventos do dia.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <PushSettings />
         </CardContent>
       </Card>
 

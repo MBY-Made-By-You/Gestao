@@ -16,6 +16,7 @@ import {
 import { signOut } from "@/app/(auth)/actions";
 import { LogoLockup } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { NotificationBell } from "@/components/notifications/notification-bell";
 import { UserAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { ROLE_LABEL } from "@/lib/constants";
@@ -45,20 +46,24 @@ export function SidebarContent({
   user,
   projects,
   onNavigate,
+  showNotifications = false,
 }: {
   user: SidebarUser;
   projects: SidebarProject[];
   onNavigate?: () => void;
+  /** Sininho ao lado da marca (só na barra lateral do desktop). */
+  showNotifications?: boolean;
 }) {
   const pathname = usePathname();
   const isStaff = user.role !== "viewer";
 
   return (
     <div className="flex h-full flex-col">
-      <div className="px-5 pt-5 pb-4">
+      <div className="flex items-center justify-between gap-2 px-5 pt-5 pb-4">
         <Link href="/dashboard" onClick={onNavigate} aria-label="Ir para o dashboard">
           <LogoLockup />
         </Link>
+        {showNotifications && <NotificationBell className="-mr-2" />}
       </div>
 
       <nav className="scrollbar-thin flex-1 space-y-6 overflow-y-auto px-3 pb-4" aria-label="Principal">

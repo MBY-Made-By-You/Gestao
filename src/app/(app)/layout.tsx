@@ -1,5 +1,7 @@
 import { SidebarContent } from "@/components/layout/app-sidebar";
 import { MobileNav } from "@/components/layout/mobile-nav";
+import { NotificationsProvider } from "@/components/notifications/notifications-provider";
+import { PushPrompt } from "@/components/notifications/push-prompt";
 import { requireProfile } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 
@@ -21,14 +23,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   };
 
   return (
-    <div className="bg-app min-h-dvh">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] border-r border-sidebar-border bg-sidebar/90 backdrop-blur-xl lg:block">
-        <SidebarContent user={user} projects={projects ?? []} />
-      </aside>
-      <MobileNav user={user} projects={projects ?? []} />
-      <div className="lg:pl-[264px]">
-        <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">{children}</main>
+    <NotificationsProvider userId={profile.id}>
+      <div className="bg-app min-h-dvh">
+        <aside className="fixed inset-y-0 left-0 z-30 hidden w-[264px] border-r border-sidebar-border bg-sidebar/90 backdrop-blur-xl lg:block">
+          <SidebarContent user={user} projects={projects ?? []} showNotifications />
+        </aside>
+        <MobileNav user={user} projects={projects ?? []} />
+        <div className="lg:pl-[264px]">
+          <main className="mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+            <PushPrompt />
+            {children}
+          </main>
+        </div>
       </div>
-    </div>
+    </NotificationsProvider>
   );
 }
