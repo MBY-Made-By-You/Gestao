@@ -58,3 +58,17 @@ export function completionMessage(task: TaskCard) {
   const each = task.assignees.length > 1 ? " cada" : "";
   return `Tarefa concluída! +${xpWithBonus(task)} XP${each} para ${joinFirstNames(task.assignees)}`;
 }
+
+const byName = (a: Tag, b: Tag) => a.name.localeCompare(b.name, "pt-BR");
+
+/** Reflete numa tarefa a edição de uma etiqueta do projeto. */
+export function withTagUpdated(task: TaskCard, tag: Tag): TaskCard {
+  if (!task.tags.some((t) => t.id === tag.id)) return task;
+  return { ...task, tags: task.tags.map((t) => (t.id === tag.id ? tag : t)).sort(byName) };
+}
+
+/** Reflete numa tarefa a exclusão de uma etiqueta do projeto. */
+export function withTagDeleted(task: TaskCard, tagId: string): TaskCard {
+  if (!task.tags.some((t) => t.id === tagId)) return task;
+  return { ...task, tags: task.tags.filter((t) => t.id !== tagId) };
+}

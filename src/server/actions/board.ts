@@ -291,6 +291,43 @@ const columnFields = z.object({
   is_done: z.boolean(),
 });
 
+const tagSchema = z.object({
+  tagId: uuid,
+  name: z.string().trim().min(1, "Dê um nome à etiqueta.").max(40, "Nome muito longo (máx. 40)."),
+  color: hexColor,
+});
+
+/** Renomeia/recolore a etiqueta — vale para todas as tarefas que a usam. */
+export async function updateTag(tagId: string, name: string, color: string): Promise<ActionResult<Tag>> {
+  const parsed = tagSchema.safeParse({ tagId, name, color });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Etiqueta inválida." };
+  const context = await getActionContext("member");
+  if (!context.ok) return context;
+
+  const { data, error } = await context.ctx.supabase
+    .from("tags")
+    .update({ name: parsed.data.name, color: parsed.data.color })
+    .eq("id", parsed.data.tagId)
+    .select("*")
+    .single();
+  if (error) {
+    if (error.code === "23505") return { ok: false, error: "Já existe uma etiqueta com esse nome no projeto." };
+    return failure(error, "Não foi possível salvar a etiqueta.");
+  }
+  return { ok: true, data };
+}
+
+/** Exclui a etiqueta do projeto (sai de todas as tarefas). */
+export async function deleteTag(tagId: string): Promise<ActionResult> {
+  if (!uuid.safeParse(tagId).success) return { ok: false, error: "Etiqueta inválida." };
+  const context = await getActionContext("member");
+  if (!context.ok) return context;
+
+  const { error } = await context.ctx.supabase.from("tags").delete().eq("id", tagId);
+  if (error) return failure(error, "Não foi possível excluir a etiqueta.");
+  return { ok: true };
+}
+
 export async function createColumn(
   projectId: string,
   fields: z.input<typeof columnFields>,

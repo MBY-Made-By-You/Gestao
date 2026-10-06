@@ -44,6 +44,7 @@ import {
   findTask,
   findTaskColumn,
   hasActiveFilters,
+  mapTasksInState,
   matchesFilters,
   moveTaskInState,
   removeTaskFromState,
@@ -53,7 +54,7 @@ import {
   type BoardState,
 } from "@/lib/kanban/board-state";
 import { positionBetween } from "@/lib/kanban/positions";
-import { completionMessage } from "@/lib/kanban/task-card";
+import { completionMessage, withTagDeleted, withTagUpdated } from "@/lib/kanban/task-card";
 import type { BoardColumn, Tag, TaskCard } from "@/lib/types";
 import { createTask, moveColumn, moveTask } from "@/server/actions/board";
 import type { BoardData } from "@/server/queries/board";
@@ -450,6 +451,15 @@ export function KanbanBoard({
   }, []);
 
   const handleTagCreated = useCallback((tag: Tag) => setTags((prev) => [...prev, tag]), []);
+  const handleTagUpdated = useCallback((tag: Tag) => {
+    setTags((prev) => prev.map((t) => (t.id === tag.id ? tag : t)));
+    setBoard((s) => mapTasksInState(s, (task) => withTagUpdated(task, tag)));
+  }, []);
+  const handleTagDeleted = useCallback((tagId: string) => {
+    setTags((prev) => prev.filter((t) => t.id !== tagId));
+    setBoard((s) => mapTasksInState(s, (task) => withTagDeleted(task, tagId)));
+    setFilters((f) => (f.tagId === tagId ? { ...f, tagId: "all" } : f));
+  }, []);
 
   function handleColumnSaved(column: BoardColumn, isNew: boolean) {
     setBoard((s) =>
@@ -544,6 +554,8 @@ export function KanbanBoard({
         onTaskDeleted={handleTaskDeleted}
         onAttachmentDelta={handleAttachmentDelta}
         onTagCreated={handleTagCreated}
+        onTagUpdated={handleTagUpdated}
+        onTagDeleted={handleTagDeleted}
       />
 
       {canEdit && createOpen && (
@@ -557,6 +569,8 @@ export function KanbanBoard({
           sprints={data.sprints}
           onCreated={handleTaskCreated}
           onTagCreated={handleTagCreated}
+        onTagUpdated={handleTagUpdated}
+        onTagDeleted={handleTagDeleted}
         />
       )}
 

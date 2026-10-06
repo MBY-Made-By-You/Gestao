@@ -9,6 +9,8 @@
    com o lilás-pastel do moletom da capivara como cor secundária.
    ========================================================================== */
 :root {
+  /* Controles nativos (ícone do date/time picker, barras de rolagem) seguem o tema. */
+  color-scheme: light;
   --radius: 0.875rem;
 
   --brand: #0399fb;
@@ -67,6 +69,7 @@
 }
 
 .dark {
+  color-scheme: dark;
   --brand: #22a6ff;
   --brand-strong: #5bbcff;
   --brand-soft: #0b2440;
@@ -205,12 +208,7 @@
   input[type="time"]::-webkit-calendar-picker-indicator,
   input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     cursor: pointer;
-    opacity: 0.6;
-  }
-  .dark input[type="date"]::-webkit-calendar-picker-indicator,
-  .dark input[type="time"]::-webkit-calendar-picker-indicator,
-  .dark input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-    filter: invert(1);
+    opacity: 0.7;
   }
 }
 

@@ -10,8 +10,8 @@ import {
   PointsSelect,
   PrioritySelect,
   SprintSelect,
-  TagPicker,
 } from "@/components/tasks/task-fields";
+import { TagPicker } from "@/components/tasks/tag-picker";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
@@ -32,6 +32,8 @@ export function CreateTaskDialog({
   defaultColumnId,
   onCreated,
   onTagCreated,
+  onTagUpdated,
+  onTagDeleted,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -44,6 +46,8 @@ export function CreateTaskDialog({
   defaultColumnId?: string | null;
   onCreated: (task: TaskCard) => void;
   onTagCreated: (tag: Tag) => void;
+  onTagUpdated: (tag: Tag) => void;
+  onTagDeleted: (tagId: string) => void;
 }) {
   const [pending, startTransition] = useTransition();
   const [title, setTitle] = useState("");
@@ -153,6 +157,11 @@ export function CreateTaskDialog({
               selectedIds={tagIds}
               onChange={setTagIds}
               onTagCreated={onTagCreated}
+              onTagUpdated={onTagUpdated}
+              onTagDeleted={(tagId) => {
+                setTagIds((prev) => prev.filter((id) => id !== tagId));
+                onTagDeleted(tagId);
+              }}
             />
           </div>
 

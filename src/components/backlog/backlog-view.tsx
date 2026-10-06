@@ -35,6 +35,7 @@ import { Checkbox, Progress } from "@/components/ui/misc";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PRIORITY_LABEL, PRIORITY_STYLE, SPRINT_STATUS_LABEL } from "@/lib/constants";
 import { dueLabel, dueState, formatShortDate, plural } from "@/lib/format";
+import { withTagDeleted, withTagUpdated } from "@/lib/kanban/task-card";
 import type { BoardColumn, MiniProfile, Project, Sprint, Tag, TaskCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { updateTask } from "@/server/actions/board";
@@ -81,6 +82,16 @@ export function BacklogView({
   const [sprintDialog, setSprintDialog] = useState<{ open: boolean; sprint: Sprint | null }>({ open: false, sprint: null });
   const [pending, startTransition] = useTransition();
   const [showCompleted, setShowCompleted] = useState(false);
+
+  function handleTagUpdated(tag: Tag) {
+    setTags((prev) => prev.map((t) => (t.id === tag.id ? tag : t)));
+    setTasks((prev) => prev.map((task) => withTagUpdated(task, tag)));
+  }
+
+  function handleTagDeleted(tagId: string) {
+    setTags((prev) => prev.filter((t) => t.id !== tagId));
+    setTasks((prev) => prev.map((task) => withTagDeleted(task, tagId)));
+  }
 
   // Recarregou no servidor (ex.: sprint iniciada) → sincroniza a lista.
   if (initialTasks !== source) {
@@ -489,6 +500,8 @@ export function BacklogView({
           )
         }
         onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
+        onTagUpdated={handleTagUpdated}
+        onTagDeleted={handleTagDeleted}
       />
 
       {canEdit && createOpen && (
@@ -506,6 +519,8 @@ export function BacklogView({
             else toast.info("Tarefa criada direto no quadro.");
           }}
           onTagCreated={(tag) => setTags((prev) => [...prev, tag])}
+        onTagUpdated={handleTagUpdated}
+        onTagDeleted={handleTagDeleted}
         />
       )}
 

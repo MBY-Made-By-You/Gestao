@@ -11,8 +11,8 @@ import {
   PointsSelect,
   PrioritySelect,
   SprintSelect,
-  TagPicker,
 } from "@/components/tasks/task-fields";
+import { TagPicker } from "@/components/tasks/tag-picker";
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -48,6 +48,8 @@ export type TaskSheetProps = {
   onTaskDeleted: (taskId: string) => void;
   onAttachmentDelta: (taskId: string, delta: number) => void;
   onTagCreated: (tag: Tag) => void;
+  onTagUpdated: (tag: Tag) => void;
+  onTagDeleted: (tagId: string) => void;
 };
 
 /** Painel lateral com todos os detalhes da tarefa (salvamento automático). */
@@ -78,6 +80,8 @@ function TaskEditor({
   onTaskDeleted,
   onAttachmentDelta,
   onTagCreated,
+  onTagUpdated,
+  onTagDeleted,
 }: TaskSheetProps & { task: TaskCard }) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
@@ -283,6 +287,8 @@ function TaskEditor({
             selectedIds={task.tags.map((t) => t.id)}
             onChange={(ids) => void saveTags(ids)}
             onTagCreated={onTagCreated}
+            onTagUpdated={onTagUpdated}
+            onTagDeleted={onTagDeleted}
             disabled={!canEdit}
           />
         </Field>

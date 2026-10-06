@@ -75,7 +75,7 @@ begin
            and (t.completed_at at time zone 'America/Sao_Paulo')::date <= t.due_date as on_time
   ) v
   where t.id = p_task_id and t.completed_at is not null
-  on conflict (task_id, user_id, reason) do nothing;
+  on conflict do nothing;
 end;
 $$;
 revoke all on function private.grant_task_xp(uuid, uuid) from public;

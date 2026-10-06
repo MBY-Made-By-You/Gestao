@@ -85,6 +85,16 @@ export function updateTaskInState(state: BoardState, taskId: string, patch: Part
 }
 
 /** Substitui/insere a tarefa vinda do servidor, respeitando coluna e posição. */
+/** Aplica `fn` a todas as tarefas do quadro (ex.: etiqueta renomeada). */
+export function mapTasksInState(state: BoardState, fn: (task: TaskCard) => TaskCard): BoardState {
+  return {
+    ...state,
+    tasksByColumn: Object.fromEntries(
+      Object.entries(state.tasksByColumn).map(([columnId, tasks]) => [columnId, tasks.map(fn)]),
+    ),
+  };
+}
+
 export function upsertTaskInState(state: BoardState, task: TaskCard): BoardState {
   const without = removeTaskFromState(state, task.id);
   if (!task.column_id || !without.tasksByColumn[task.column_id]) return without;
