@@ -5,7 +5,7 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { CalendarClock, CircleCheckBig, Flag, Paperclip } from "lucide-react";
 
-import { UserAvatar } from "@/components/ui/avatar";
+import { AvatarStack } from "@/components/ui/avatar";
 import { PRIORITY_LABEL, PRIORITY_STYLE } from "@/lib/constants";
 import { dueLabel, dueState, plural } from "@/lib/format";
 import type { TaskCard } from "@/lib/types";
@@ -123,12 +123,8 @@ export const TaskCardView = memo(function TaskCardView({
               {task.story_points}
             </span>
           )}
-          {task.assignee ? (
-            <UserAvatar
-              name={task.assignee.full_name}
-              src={task.assignee.avatar_url}
-              className="size-6 ring-2 ring-card"
-            />
+          {task.assignees.length > 0 ? (
+            <AvatarStack people={task.assignees} className="size-6" />
           ) : (
             <span
               className="grid size-6 place-items-center rounded-full border border-dashed border-muted-foreground/40 text-[10px] text-muted-foreground"

@@ -29,7 +29,6 @@ const task = (id: string, column_id: string, position: number, extra: Partial<Ta
   sprint_id: null,
   title: id,
   description: null,
-  assignee_id: null,
   created_by: null,
   priority: "medium",
   due_date: null,
@@ -39,7 +38,7 @@ const task = (id: string, column_id: string, position: number, extra: Partial<Ta
   completed_at: null,
   created_at: "",
   updated_at: "",
-  assignee: null,
+  assignees: [],
   tags: [],
   attachment_count: 0,
   ...extra,
@@ -76,8 +75,17 @@ describe("board state", () => {
   });
 
   it("filtra por texto, responsável e prioridade", () => {
-    const t = task("x", "todo", 1, { title: "Montar protótipo", priority: "high", assignee_id: "u1" });
+    const t = task("x", "todo", 1, {
+      title: "Montar protótipo",
+      priority: "high",
+      assignees: [
+        { id: "u1", full_name: "Ana", avatar_url: null },
+        { id: "u3", full_name: "Bruno", avatar_url: null },
+      ],
+    });
     expect(matchesFilters(t, { ...EMPTY_FILTERS, query: "protót" })).toBe(true);
+    expect(matchesFilters(t, { ...EMPTY_FILTERS, assigneeId: "u1" })).toBe(true);
+    expect(matchesFilters(t, { ...EMPTY_FILTERS, assigneeId: "u3" })).toBe(true);
     expect(matchesFilters(t, { ...EMPTY_FILTERS, assigneeId: "u2" })).toBe(false);
     expect(matchesFilters(t, { ...EMPTY_FILTERS, assigneeId: "none" })).toBe(false);
     expect(matchesFilters(t, { ...EMPTY_FILTERS, priority: "high" })).toBe(true);

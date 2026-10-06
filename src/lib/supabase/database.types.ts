@@ -720,6 +720,46 @@ export type Database = {
           },
         ]
       }
+      task_assignees: {
+        Row: {
+          assigned_at: string
+          task_id: string
+          user_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          task_id: string
+          user_id: string
+        }
+        Update: {
+          assigned_at?: string
+          task_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_assignees_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_assignees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "member_stats"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "task_assignees_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       task_tags: {
         Row: {
           tag_id: string
@@ -752,7 +792,6 @@ export type Database = {
       }
       tasks: {
         Row: {
-          assignee_id: string | null
           column_id: string | null
           completed_at: string | null
           created_at: string
@@ -770,7 +809,6 @@ export type Database = {
           xp_reward: number | null
         }
         Insert: {
-          assignee_id?: string | null
           column_id?: string | null
           completed_at?: string | null
           created_at?: string
@@ -788,7 +826,6 @@ export type Database = {
           xp_reward?: number | null
         }
         Update: {
-          assignee_id?: string | null
           column_id?: string | null
           completed_at?: string | null
           created_at?: string
@@ -806,20 +843,6 @@ export type Database = {
           xp_reward?: number | null
         }
         Relationships: [
-          {
-            foreignKeyName: "tasks_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "member_stats"
-            referencedColumns: ["user_id"]
-          },
-          {
-            foreignKeyName: "tasks_assignee_id_fkey"
-            columns: ["assignee_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tasks_column_fkey"
             columns: ["column_id", "project_id"]

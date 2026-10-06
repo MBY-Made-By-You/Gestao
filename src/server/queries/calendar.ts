@@ -22,7 +22,6 @@ export type CalendarTaskItem = {
   priority: TaskPriority;
   completed_at: string | null;
   project: { id: string; name: string; color: string };
-  assignee: MiniProfile | null;
 };
 
 export function calendarRange(view: CalendarView, anchor: Date) {
@@ -52,7 +51,7 @@ export async function getCalendarData(view: CalendarView, anchor: Date) {
     supabase
       .from("tasks")
       .select(
-        "id, title, due_date, priority, completed_at, project:projects(id, name, color), assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url)",
+        "id, title, due_date, priority, completed_at, project:projects(id, name, color)",
       )
       .gte("due_date", toDateInput(start))
       .lte("due_date", toDateInput(end))

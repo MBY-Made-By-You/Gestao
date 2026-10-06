@@ -41,9 +41,10 @@ export type EventType = Enums<"event_type">;
 // -----------------------------------------------------------------------------
 export type MiniProfile = Pick<Profile, "id" | "full_name" | "avatar_url">;
 
-/** Tarefa com responsável, etiquetas e contagem de anexos (card do Kanban). */
+/** Tarefa com responsáveis, etiquetas e contagem de anexos (card do Kanban). */
 export type TaskCard = Task & {
-  assignee: MiniProfile | null;
+  /** Em ordem de atribuição; cada um ganha o XP cheio ao concluir. */
+  assignees: MiniProfile[];
   tags: Tag[];
   attachment_count: number;
 };

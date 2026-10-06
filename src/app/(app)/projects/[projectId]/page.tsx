@@ -6,7 +6,7 @@ import { AlertTriangle, CheckCircle2, Flag, Hourglass, ListTodo, Milestone, Squa
 import { BurndownChart } from "@/components/charts/burndown-chart";
 import { ProjectAdminButtons, ProjectMembers } from "@/components/projects/project-actions";
 import { StatTile } from "@/components/shared/stat-tile";
-import { UserAvatar } from "@/components/ui/avatar";
+import { AvatarStack } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,7 +110,7 @@ export default async function ProjectOverviewPage({ params }: PageProps<"/projec
                         <span className={cn("size-2 shrink-0 rounded-full", PRIORITY_STYLE[t.priority as TaskPriority].dot)} />
                         <span className="min-w-0 flex-1 truncate text-sm font-semibold">{t.title}</span>
                         <span className="text-xs text-muted-foreground">{dueLabel(t.due_date)}</span>
-                        {t.assignee && <UserAvatar name={t.assignee.full_name} src={t.assignee.avatar_url} className="size-6" />}
+                        {t.assignees.length > 0 && <AvatarStack people={t.assignees} className="size-6" />}
                       </Link>
                     </li>
                   ))}

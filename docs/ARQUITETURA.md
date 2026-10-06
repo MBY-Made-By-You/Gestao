@@ -57,6 +57,7 @@ Migrations em [`supabase/migrations`](../supabase/migrations), aplicadas em orde
 | `…_storage.sql` | Buckets e políticas do Storage |
 | `…_realtime_seed.sql` | Publicação do Realtime e categorias financeiras iniciais |
 | `…_event_minutes.sql` | Atas de eventos/reuniões (`event_minutes`, 1:1 com `events`) e sua RLS |
+| `…_task_assignees.sql` | Vários responsáveis por tarefa (`task_assignees`) e XP para cada um |
 
 ### 2.1 Diagrama entidade-relacionamento
 
@@ -71,7 +72,8 @@ erDiagram
   PROJECTS ||--o{ TAGS : tem
   BOARD_COLUMNS |o--o{ TASKS : "contém (NULL = backlog)"
   SPRINTS |o--o{ TASKS : planeja
-  PROFILES |o--o{ TASKS : "responsável"
+  TASKS ||--o{ TASK_ASSIGNEES : "responsáveis"
+  PROFILES ||--o{ TASK_ASSIGNEES : ""
   TASKS ||--o{ TASK_TAGS : ""
   TAGS ||--o{ TASK_TAGS : ""
   TASKS ||--o{ TASK_ATTACHMENTS : "imagens"
@@ -131,7 +133,6 @@ create table public.tasks (
   sprint_id     uuid,                    -- sprint (mesmo projeto, via FK composta)
   title         text not null,
   description   text,
-  assignee_id   uuid references public.profiles (id) on delete set null,
   created_by    uuid default auth.uid() references public.profiles (id) on delete set null,
   priority      public.task_priority not null default 'medium',  -- low | medium | high | urgent
   due_date      date,
@@ -190,8 +191,9 @@ create table public.task_attachments (
 | `project_members` | Vínculo pessoa ↔ projeto | Define o que um **visualizador/cliente** enxerga |
 | `board_columns` | Colunas personalizáveis do Kanban | `is_done` marca a coluna de conclusão; `wip_limit` opcional; 4 colunas padrão criadas por gatilho |
 | `sprints` | Ciclos de trabalho | No máximo **uma sprint ativa por projeto** (índice único parcial) |
+| `task_assignees` | Responsáveis da tarefa (N:N) | Todos recebem o XP cheio da tarefa; entrar/sair de uma tarefa já concluída dá/estorna o XP |
 | `tags` / `task_tags` | Etiquetas por projeto | Nome único por projeto; a política só aceita tag do mesmo projeto da tarefa |
-| `xp_events` | Livro-razão de XP | Escrito **apenas por gatilho**; `unique (task_id, reason)` impede XP em dobro |
+| `xp_events` | Livro-razão de XP | Escrito **apenas por gatilho**; `unique (task_id, user_id, reason)` impede XP em dobro |
 | `finance_categories` | Categorias de receita/despesa | 13 categorias iniciais (seed) |
 | `resources` | Insumos/materiais em estoque | `quantity` e `unit_cost` (custo médio ponderado) mantidos por gatilho |
 | `resource_movements` | Entradas (compras) e saídas (consumo por projeto) | Saída maior que o estoque é bloqueada no banco |
@@ -205,7 +207,7 @@ create table public.task_attachments (
 | `guard_profile_update` | Só admin altera papéis; sempre resta ao menos um admin; e-mail só muda via Auth |
 | `handle_new_project` | Cria as colunas *A Fazer, Em Andamento, Revisão, Concluído* e adiciona o dono como membro |
 | `tasks_before_write` | Posição padrão no fim da coluna; `completed_at` preenchido/limpo conforme a coluna é ou não de conclusão |
-| `tasks_award_xp` | Ao concluir: XP = pontos × peso da prioridade (baixa 5, média 10, alta 15, urgente 20), **+50% se no prazo**; reabrir remove o XP |
+| `tasks_award_xp` | Ao concluir: **cada responsável** ganha XP = pontos × peso da prioridade (baixa 5, média 10, alta 15, urgente 20), **+50% se no prazo**; reabrir remove o XP |
 | `board_columns_after_update` | Marcar/desmarcar uma coluna como “concluída” atualiza as tarefas dela (e o XP) |
 | `resource_movements_*` | Entrada recalcula o custo médio ponderado; saída valida saldo (“Estoque insuficiente…”) e usa o custo médio; exclusão estorna |
 
@@ -347,7 +349,7 @@ Decisões principais:
   (a RLS filtra o que cada um recebe) e recarrega o quadro com *debounce*,
   sem interromper um arraste em andamento.
 - **Card da tarefa**: título, etiquetas, prioridade, prazo (atrasada/hoje/entregue),
-  contador de anexos, pontos e responsável. Clicar abre o painel lateral com
+  contador de anexos, pontos e responsáveis. Clicar abre o painel lateral com
   link direto (`?task=<id>`).
 
 ---

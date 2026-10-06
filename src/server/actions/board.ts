@@ -10,6 +10,7 @@ import type { ActionResult, BoardColumn, Tag, TaskCard } from "@/lib/types";
 import { failure, getActionContext } from "@/server/action-context";
 
 const uuid = z.uuid("Identificador inválido.");
+const MAX_ASSIGNEES = 10;
 const hexColor = z.string().regex(/^#[0-9A-Fa-f]{6}$/, "Cor inválida.");
 const dateOnly = z
   .string()
@@ -19,7 +20,6 @@ const dateOnly = z
 const taskFields = z.object({
   title: z.string().trim().min(1, "Dê um título à tarefa.").max(200),
   description: z.string().max(10000).nullable(),
-  assignee_id: uuid.nullable(),
   priority: z.enum(["low", "medium", "high", "urgent"]),
   due_date: dateOnly,
   story_points: z.number().int().min(0).max(21),
@@ -41,6 +41,7 @@ const createTaskSchema = taskFields.partial().extend({
   project_id: uuid,
   title: taskFields.shape.title,
   tag_ids: z.array(uuid).max(20).optional(),
+  assignee_ids: z.array(uuid).max(MAX_ASSIGNEES, `No máximo ${MAX_ASSIGNEES} responsáveis.`).optional(),
   position: z.number().finite().optional(),
 });
 
@@ -50,7 +51,7 @@ export async function createTask(input: z.input<typeof createTaskSchema>): Promi
   const context = await getActionContext("member");
   if (!context.ok) return context;
   const { supabase } = context.ctx;
-  const { tag_ids, position, ...fields } = parsed.data;
+  const { tag_ids, assignee_ids, position, ...fields } = parsed.data;
 
   try {
     // Posição no fim da coluna (ou do backlog).
@@ -74,6 +75,12 @@ export async function createTask(input: z.input<typeof createTaskSchema>): Promi
         .from("task_tags")
         .insert(tag_ids.map((tag_id) => ({ task_id: data.id, tag_id })));
       if (tagError) throw tagError;
+    }
+    if (assignee_ids?.length) {
+      const { error: assigneeError } = await supabase
+        .from("task_assignees")
+        .insert([...new Set(assignee_ids)].map((user_id) => ({ task_id: data.id, user_id })));
+      if (assigneeError) throw assigneeError;
     }
     return { ok: true, data: await fetchTaskCard(supabase, data.id) };
   } catch (error) {
@@ -213,6 +220,46 @@ export async function setTaskTags(taskId: string, tagIds: string[]): Promise<Act
     return { ok: true, data: await fetchTaskCard(supabase, taskId) };
   } catch (error) {
     return failure(error, "Não foi possível atualizar as etiquetas.");
+  }
+}
+
+/**
+ * Define os responsáveis da tarefa. Os gatilhos do banco dão (ou estornam) o
+ * XP de quem entra/sai quando a tarefa já está concluída.
+ */
+export async function setTaskAssignees(taskId: string, userIds: string[]): Promise<ActionResult<TaskCard>> {
+  const parsed = z
+    .object({ taskId: uuid, userIds: z.array(uuid).max(MAX_ASSIGNEES, `No máximo ${MAX_ASSIGNEES} responsáveis.`) })
+    .safeParse({ taskId, userIds });
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Responsáveis inválidos." };
+  const context = await getActionContext("member");
+  if (!context.ok) return context;
+  const { supabase } = context.ctx;
+
+  try {
+    const { data: current, error } = await supabase.from("task_assignees").select("user_id").eq("task_id", taskId);
+    if (error) throw error;
+    const currentIds = new Set((current ?? []).map((a) => a.user_id));
+    const wanted = new Set(userIds);
+    const toRemove = [...currentIds].filter((id) => !wanted.has(id));
+    const toAdd = [...wanted].filter((id) => !currentIds.has(id));
+    if (toRemove.length) {
+      const { error: delError } = await supabase
+        .from("task_assignees")
+        .delete()
+        .eq("task_id", taskId)
+        .in("user_id", toRemove);
+      if (delError) throw delError;
+    }
+    if (toAdd.length) {
+      const { error: insError } = await supabase
+        .from("task_assignees")
+        .insert(toAdd.map((user_id) => ({ task_id: taskId, user_id })));
+      if (insError) throw insError;
+    }
+    return { ok: true, data: await fetchTaskCard(supabase, taskId) };
+  } catch (error) {
+    return failure(error, "Não foi possível atualizar os responsáveis.");
   }
 }
 

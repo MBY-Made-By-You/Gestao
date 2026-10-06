@@ -5,7 +5,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
-  AssigneeSelect,
+  AssigneesPicker,
   ColumnSelect,
   PointsSelect,
   PrioritySelect,
@@ -51,7 +51,7 @@ export function CreateTaskDialog({
   const [columnId, setColumnId] = useState<string | null>(
     defaultColumnId === undefined ? (columns[0]?.id ?? null) : defaultColumnId,
   );
-  const [assigneeId, setAssigneeId] = useState<string | null>(null);
+  const [assignees, setAssignees] = useState<MiniProfile[]>([]);
   const [priority, setPriority] = useState<TaskPriority>("medium");
   const [dueDate, setDueDate] = useState("");
   const [points, setPoints] = useState(1);
@@ -66,7 +66,7 @@ export function CreateTaskDialog({
         title,
         description: description.trim() || null,
         column_id: columnId,
-        assignee_id: assigneeId,
+        assignee_ids: assignees.map((p) => p.id),
         priority,
         due_date: dueDate || null,
         story_points: points,
@@ -90,7 +90,7 @@ export function CreateTaskDialog({
           <DialogHeader>
             <DialogTitle>Nova tarefa</DialogTitle>
             <DialogDescription>
-              Vale {points * PRIORITY_XP_WEIGHT[priority]} XP para o responsável ao concluir (+50% se no prazo).
+              Vale {points * PRIORITY_XP_WEIGHT[priority]} XP para cada responsável ao concluir (+50% se no prazo).
             </DialogDescription>
           </DialogHeader>
 
@@ -123,10 +123,6 @@ export function CreateTaskDialog({
               <ColumnSelect id="new-task-column" columns={columns} value={columnId} onChange={setColumnId} />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="new-task-assignee">Responsável</Label>
-              <AssigneeSelect id="new-task-assignee" members={members} value={assigneeId} onChange={setAssigneeId} />
-            </div>
-            <div className="space-y-2">
               <Label htmlFor="new-task-priority">Prioridade</Label>
               <PrioritySelect id="new-task-priority" value={priority} onChange={setPriority} />
             </div>
@@ -142,6 +138,11 @@ export function CreateTaskDialog({
               <Label htmlFor="new-task-sprint">Sprint</Label>
               <SprintSelect id="new-task-sprint" sprints={sprints} value={sprintId} onChange={setSprintId} />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="new-task-assignees">Responsáveis</Label>
+            <AssigneesPicker id="new-task-assignees" members={members} value={assignees} onChange={setAssignees} />
           </div>
 
           <div className="space-y-2">

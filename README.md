@@ -15,7 +15,7 @@ shadcn/ui e Supabase (Postgres, Auth, Storage e Realtime).
   limite WIP e coluna de conclusão.
 - **Backlog** e **sprints**: planeje tarefas fora do quadro e, ao iniciar a sprint,
   elas entram no quadro.
-- Cards com título, descrição, responsável, etiquetas, prazo, estimativa (pontos)
+- Cards com título, descrição, **um ou mais responsáveis**, etiquetas, prazo, estimativa (pontos)
   e **anexos de imagem** — referência visual ou comprovação de conclusão —
   com compressão automática, barra de progresso, colar com Ctrl+V e câmera no celular.
 
@@ -29,7 +29,7 @@ shadcn/ui e Supabase (Postgres, Auth, Storage e Realtime).
 **Equipe e permissões**
 - Perfis **Admin**, **Membro** e **Visualizador/Cliente** (o cliente só enxerga os
   projetos em que foi incluído e não vê o financeiro).
-- Métricas individuais e **gamificação**: XP por tarefa concluída (+50% no prazo),
+- Métricas individuais e **gamificação**: XP por tarefa concluída (+50% no prazo; com vários responsáveis, cada um ganha o XP cheio),
   níveis “Capivara”, conquistas e ranking.
 
 **Calendário** — visões mensal e semanal com os prazos do Kanban, reuniões,

@@ -136,8 +136,13 @@ export function matchesFilters(task: TaskCard, filters: BoardFilters): boolean {
     const haystack = `${task.title} ${task.description ?? ""} ${task.tags.map((t) => t.name).join(" ")}`.toLocaleLowerCase("pt-BR");
     if (!haystack.includes(query)) return false;
   }
-  if (filters.assigneeId === "none" && task.assignee_id) return false;
-  if (filters.assigneeId !== "all" && filters.assigneeId !== "none" && task.assignee_id !== filters.assigneeId) return false;
+  if (filters.assigneeId === "none" && task.assignees.length > 0) return false;
+  if (
+    filters.assigneeId !== "all" &&
+    filters.assigneeId !== "none" &&
+    !task.assignees.some((a) => a.id === filters.assigneeId)
+  )
+    return false;
   if (filters.tagId !== "all" && !task.tags.some((t) => t.id === filters.tagId)) return false;
   if (filters.priority !== "all" && task.priority !== filters.priority) return false;
   if (filters.sprintId !== "all" && task.sprint_id !== filters.sprintId) return false;

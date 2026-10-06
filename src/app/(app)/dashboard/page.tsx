@@ -20,7 +20,7 @@ import { CashflowChart } from "@/components/charts/cashflow-chart";
 import { DashboardBurndown } from "@/components/dashboard/dashboard-burndown";
 import { EmptyState } from "@/components/brand/empty-state";
 import { StatTile } from "@/components/shared/stat-tile";
-import { UserAvatar } from "@/components/ui/avatar";
+import { AvatarStack, UserAvatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -176,9 +176,7 @@ export default async function DashboardPage() {
                         >
                           {dueLabel(task.due_date)}
                         </span>
-                        {task.assignee && (
-                          <UserAvatar name={task.assignee.full_name} src={task.assignee.avatar_url} className="size-6" />
-                        )}
+                        {task.assignees.length > 0 && <AvatarStack people={task.assignees} className="size-6" />}
                       </Link>
                     </li>
                   );

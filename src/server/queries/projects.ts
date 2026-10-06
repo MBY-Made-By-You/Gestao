@@ -2,6 +2,7 @@ import "server-only";
 
 import { buildBurndown, type BurndownResult } from "@/lib/analytics/burndown";
 import { toDateInput, todayInAppTimeZone } from "@/lib/format";
+import { toAssignees } from "@/lib/kanban/task-card";
 import { createClient } from "@/lib/supabase/server";
 import type {
   AppRole,
@@ -69,7 +70,7 @@ export type ProjectOverview = {
   activeSprint: Sprint | null;
   burndown: BurndownResult & { scope: "sprint" | "project"; label: string; start: string; end: string };
   milestones: CalendarEvent[];
-  upcomingTasks: { id: string; title: string; due_date: string | null; priority: string; assignee: MiniProfile | null }[];
+  upcomingTasks: { id: string; title: string; due_date: string | null; priority: string; assignees: MiniProfile[] }[];
   ownerName: string | null;
 };
 
@@ -99,7 +100,7 @@ export async function getProjectOverview(projectId: string): Promise<ProjectOver
         .limit(6),
       supabase
         .from("tasks")
-        .select("id, title, due_date, priority, assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url)")
+        .select("id, title, due_date, priority, task_assignees(assigned_at, profile:profiles!task_assignees_user_id_fkey(id, full_name, avatar_url))")
         .eq("project_id", projectId)
         .is("completed_at", null)
         .not("due_date", "is", null)
@@ -139,7 +140,10 @@ export async function getProjectOverview(projectId: string): Promise<ProjectOver
     activeSprint,
     burndown: { ...buildBurndown(scopedTasks, { start, end }, todayInAppTimeZone()), scope, label, start, end },
     milestones: milestonesRes.data ?? [],
-    upcomingTasks: upcomingRes.data ?? [],
+    upcomingTasks: (upcomingRes.data ?? []).map(({ task_assignees, ...t }) => ({
+      ...t,
+      assignees: toAssignees(task_assignees),
+    })),
     ownerName: owner?.full_name ?? null,
   };
 }

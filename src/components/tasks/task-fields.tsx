@@ -1,14 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Plus, Tags } from "lucide-react";
+import { Check, Plus, Tags, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 
 import { UserAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { COLOR_SWATCHES, PRIORITY_LABEL, PRIORITY_STYLE, STORY_POINT_OPTIONS } from "@/lib/constants";
 import type { BoardColumn, MiniProfile, Sprint, Tag, TaskPriority } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,8 @@ import { createTag } from "@/server/actions/board";
 
 const NONE = "__none__";
 
-export function AssigneeSelect({
+/** Seleção múltipla de responsáveis — todos ganham o XP cheio da tarefa. */
+export function AssigneesPicker({
   members,
   value,
   onChange,
@@ -24,30 +25,58 @@ export function AssigneeSelect({
   id,
 }: {
   members: MiniProfile[];
-  value: string | null;
-  onChange: (value: string | null) => void;
+  value: MiniProfile[];
+  onChange: (value: MiniProfile[]) => void;
   disabled?: boolean;
   id?: string;
 }) {
+  const selectedIds = new Set(value.map((p) => p.id));
+  // Quem já é responsável aparece mesmo que tenha saído do projeto.
+  const options = [...members, ...value.filter((p) => !members.some((m) => m.id === p.id))];
+
+  function toggle(person: MiniProfile) {
+    onChange(selectedIds.has(person.id) ? value.filter((p) => p.id !== person.id) : [...value, person]);
+  }
+
   return (
-    <Select value={value ?? NONE} onValueChange={(v) => onChange(v === NONE ? null : v)} disabled={disabled}>
-      <SelectTrigger id={id}>
-        <SelectValue />
-      </SelectTrigger>
-      <SelectContent>
-        <SelectItem value={NONE}>
-          <span className="grid size-5 place-items-center rounded-full border border-dashed text-[10px]">?</span>
-          Sem responsável
-        </SelectItem>
-        <SelectSeparator />
-        {members.map((m) => (
-          <SelectItem key={m.id} value={m.id}>
-            <UserAvatar name={m.full_name} src={m.avatar_url} className="size-5" />
-            {m.full_name || "Sem nome"}
-          </SelectItem>
-        ))}
-      </SelectContent>
-    </Select>
+    <div className="flex flex-wrap items-center gap-1.5">
+      {value.map((m) => (
+        <span
+          key={m.id}
+          className="inline-flex items-center gap-1.5 rounded-full bg-muted py-0.5 pr-2.5 pl-0.5 text-xs font-semibold"
+        >
+          <UserAvatar name={m.full_name} src={m.avatar_url} className="size-5" />
+          {m.full_name.split(" ")[0] || "Sem nome"}
+        </span>
+      ))}
+      {!disabled && (
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button id={id} type="button" variant="outline" size="sm" className="h-7 border-dashed">
+              <UserPlus /> {value.length ? "Editar" : "Adicionar responsável"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-64 p-0" align="start">
+            <Command>
+              <CommandInput placeholder="Buscar pessoa…" />
+              <CommandList>
+                <CommandEmpty>Ninguém encontrado.</CommandEmpty>
+                <CommandGroup heading="Cada responsável ganha o XP cheio">
+                  {options.map((m) => (
+                    <CommandItem key={m.id} value={`${m.full_name} ${m.id}`} onSelect={() => toggle(m)}>
+                      <UserAvatar name={m.full_name} src={m.avatar_url} className="size-5" />
+                      <span className="flex-1 truncate">{m.full_name || "Sem nome"}</span>
+                      {selectedIds.has(m.id) && <Check className="text-brand" />}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      )}
+      {disabled && value.length === 0 && <span className="text-sm text-muted-foreground">Sem responsável</span>}
+    </div>
   );
 }
 

@@ -58,4 +58,41 @@ function UserAvatar({
   );
 }
 
-export { Avatar, AvatarImage, AvatarFallback, UserAvatar };
+/** Avatares sobrepostos (ex.: responsáveis de uma tarefa), com "+N" excedente. */
+function AvatarStack({
+  people,
+  max = 3,
+  className,
+  ringClassName = "ring-card",
+}: {
+  people: { id: string; full_name: string | null; avatar_url: string | null }[];
+  max?: number;
+  className?: string;
+  ringClassName?: string;
+}) {
+  const shown = people.length > max ? people.slice(0, max - 1) : people;
+  const rest = people.length - shown.length;
+  return (
+    <span
+      className="flex -space-x-1.5"
+      title={people.map((p) => p.full_name).filter(Boolean).join(", ")}
+    >
+      {shown.map((p) => (
+        <UserAvatar key={p.id} name={p.full_name} src={p.avatar_url} className={cn("ring-2", ringClassName, className)} />
+      ))}
+      {rest > 0 && (
+        <span
+          className={cn(
+            "relative grid place-items-center rounded-full bg-muted text-[10px] font-bold text-muted-foreground ring-2",
+            ringClassName,
+            className,
+          )}
+        >
+          +{rest}
+        </span>
+      )}
+    </span>
+  );
+}
+
+export { Avatar, AvatarImage, AvatarFallback, UserAvatar, AvatarStack };

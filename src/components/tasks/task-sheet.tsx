@@ -6,7 +6,7 @@ import { toast } from "sonner";
 
 import { TaskAttachments } from "@/components/tasks/attachments/task-attachments";
 import {
-  AssigneeSelect,
+  AssigneesPicker,
   ColumnSelect,
   PointsSelect,
   PrioritySelect,
@@ -31,7 +31,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { dueLabel, dueState, formatDateTime, formatRelative } from "@/lib/format";
 import type { BoardColumn, MiniProfile, Sprint, Tag, TaskCard } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { deleteTask, setTaskTags, updateTask } from "@/server/actions/board";
+import { completionMessage } from "@/lib/kanban/task-card";
+import { deleteTask, setTaskAssignees, setTaskTags, updateTask } from "@/server/actions/board";
 
 export type TaskSheetProps = {
   task: TaskCard | null;
@@ -61,7 +62,7 @@ export function TaskSheet(props: TaskSheetProps) {
   );
 }
 
-type EditableField = "title" | "description" | "assignee_id" | "priority" | "due_date" | "story_points" | "sprint_id" | "column_id";
+type EditableField = "title" | "description" | "priority" | "due_date" | "story_points" | "sprint_id" | "column_id";
 
 function TaskEditor({
   task,
@@ -80,7 +81,7 @@ function TaskEditor({
 }: TaskSheetProps & { task: TaskCard }) {
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description ?? "");
-  const [saving, setSaving] = useState<EditableField | "tags" | null>(null);
+  const [saving, setSaving] = useState<EditableField | "tags" | "assignees" | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, startDelete] = useTransition();
 
@@ -101,7 +102,7 @@ function TaskEditor({
     }
     onTaskChange(result.data!);
     if (field === "column_id" && !previous.completed_at && result.data!.completed_at) {
-      toast.success(`Tarefa concluída! +${result.data!.xp_reward ?? 0} XP`);
+      toast.success(completionMessage(result.data!));
     }
   }
 
@@ -111,6 +112,23 @@ function TaskEditor({
     const previous = task;
     onTaskChange({ ...task, tags: optimistic });
     const result = await setTaskTags(task.id, ids);
+    setSaving(null);
+    if (!result.ok) {
+      onTaskChange(previous);
+      toast.error(result.error);
+      return;
+    }
+    onTaskChange(result.data!);
+  }
+
+  async function saveAssignees(people: MiniProfile[]) {
+    setSaving("assignees");
+    const previous = task;
+    onTaskChange({ ...task, assignees: people });
+    const result = await setTaskAssignees(
+      task.id,
+      people.map((p) => p.id),
+    );
     setSaving(null);
     if (!result.ok) {
       onTaskChange(previous);
@@ -196,7 +214,7 @@ function TaskEditor({
             </span>
           ) : null}
           <span className="inline-flex items-center gap-1 font-semibold text-brand-strong dark:text-brand">
-            <Sparkles className="size-3.5" /> {task.xp_reward ?? 0} XP (+50% no prazo)
+            <Sparkles className="size-3.5" /> {task.xp_reward ?? 0} XP{task.assignees.length > 1 ? " para cada" : ""} (+50% no prazo)
           </span>
         </SheetDescription>
       </div>
@@ -209,15 +227,6 @@ function TaskEditor({
               columns={columns}
               value={task.column_id}
               onChange={(v) => void save("column_id", v)}
-              disabled={!canEdit}
-            />
-          </Field>
-          <Field label="Responsável" htmlFor="task-assignee">
-            <AssigneeSelect
-              id="task-assignee"
-              members={members}
-              value={task.assignee_id}
-              onChange={(v) => void save("assignee_id", v)}
               disabled={!canEdit}
             />
           </Field>
@@ -256,6 +265,16 @@ function TaskEditor({
             />
           </Field>
         </div>
+
+        <Field label="Responsáveis" htmlFor="task-assignees">
+          <AssigneesPicker
+            id="task-assignees"
+            members={members}
+            value={task.assignees}
+            onChange={(people) => void saveAssignees(people)}
+            disabled={!canEdit}
+          />
+        </Field>
 
         <Field label="Etiquetas">
           <TagPicker

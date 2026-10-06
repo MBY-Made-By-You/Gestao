@@ -21,7 +21,7 @@ import { EmptyState } from "@/components/brand/empty-state";
 import { SprintDialog } from "@/components/backlog/sprint-dialog";
 import { CreateTaskDialog } from "@/components/tasks/create-task-dialog";
 import { TaskSheet } from "@/components/tasks/task-sheet";
-import { UserAvatar } from "@/components/ui/avatar";
+import { AvatarStack } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -424,8 +424,8 @@ export function BacklogView({
                           <span className="grid h-5 min-w-5 place-items-center rounded-full bg-secondary px-1 text-[10.5px] font-bold">
                             {task.story_points}
                           </span>
-                          {task.assignee ? (
-                            <UserAvatar name={task.assignee.full_name} src={task.assignee.avatar_url} className="size-6" />
+                          {task.assignees.length > 0 ? (
+                            <AvatarStack people={task.assignees} max={2} className="size-6" />
                           ) : (
                             <span className="size-6" />
                           )}

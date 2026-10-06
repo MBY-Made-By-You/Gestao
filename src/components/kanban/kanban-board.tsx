@@ -53,7 +53,7 @@ import {
   type BoardState,
 } from "@/lib/kanban/board-state";
 import { positionBetween } from "@/lib/kanban/positions";
-import { parseDateOnly } from "@/lib/format";
+import { completionMessage } from "@/lib/kanban/task-card";
 import type { BoardColumn, Tag, TaskCard } from "@/lib/types";
 import { createTask, moveColumn, moveTask } from "@/server/actions/board";
 import type { BoardData } from "@/server/queries/board";
@@ -68,13 +68,6 @@ const screenReaderInstructions = {
 };
 
 const subscribeNoop = () => () => {};
-
-function xpWithBonus(task: TaskCard) {
-  const base = task.xp_reward ?? 0;
-  if (!task.due_date || !task.completed_at) return base;
-  const onTime = new Date(task.completed_at) <= new Date(parseDateOnly(task.due_date).getTime() + 86_399_999);
-  return onTime ? base + Math.ceil(base * 0.5) : base;
-}
 
 /**
  * Quadro Kanban com arrastar e soltar (dnd-kit):
@@ -363,10 +356,7 @@ export function KanbanBoard({
     if (result.data!.rebalanced) router.refresh();
 
     if (!original.completed_at && saved.completed_at) {
-      const who = saved.assignee?.full_name?.split(" ")[0];
-      toast.success(
-        who ? `Tarefa concluída! +${xpWithBonus(saved)} XP para ${who}` : "Tarefa concluída! Defina um responsável para ganhar XP.",
-      );
+      toast.success(completionMessage(saved));
     }
     const count = (optimistic.tasksByColumn[placement.columnId] ?? []).length;
     if (placement.columnId !== originalColumn && targetColumn.wip_limit && count > targetColumn.wip_limit) {

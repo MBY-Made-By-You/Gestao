@@ -5,6 +5,7 @@ import { ptBR } from "date-fns/locale";
 
 import { buildBurndown, type BurndownResult } from "@/lib/analytics/burndown";
 import { toDateInput, todayInAppTimeZone } from "@/lib/format";
+import { toAssignees } from "@/lib/kanban/task-card";
 import { wallTimeToIso } from "@/lib/timezone";
 import { createClient } from "@/lib/supabase/server";
 import type { CalendarEvent, MemberStats, MiniProfile, SessionProfile, TaskPriority } from "@/lib/types";
@@ -30,7 +31,7 @@ export type UrgentTask = {
   due_date: string;
   priority: TaskPriority;
   project: { id: string; name: string; color: string };
-  assignee: MiniProfile | null;
+  assignees: MiniProfile[];
 };
 
 export type CashflowPoint = { month: string; label: string; income: number; expense: number; balance: number };
@@ -72,7 +73,7 @@ export async function getDashboardData(profile: SessionProfile): Promise<Dashboa
     supabase
       .from("tasks")
       .select(
-        "id, title, due_date, priority, project:projects(id, name, color), assignee:profiles!tasks_assignee_id_fkey(id, full_name, avatar_url)",
+        "id, title, due_date, priority, project:projects(id, name, color), task_assignees(assigned_at, profile:profiles!task_assignees_user_id_fkey(id, full_name, avatar_url))",
       )
       .is("completed_at", null)
       .not("column_id", "is", null)
@@ -83,9 +84,9 @@ export async function getDashboardData(profile: SessionProfile): Promise<Dashboa
     supabase.from("tasks").select("id", { count: "exact", head: true }).is("completed_at", null).not("column_id", "is", null),
     supabase
       .from("tasks")
-      .select("id", { count: "exact", head: true })
+      .select("id, task_assignees!inner(user_id)", { count: "exact", head: true })
       .is("completed_at", null)
-      .eq("assignee_id", profile.id),
+      .eq("task_assignees.user_id", profile.id),
     supabase
       .from("events")
       .select("*, project:projects(name, color)")
@@ -179,7 +180,9 @@ export async function getDashboardData(profile: SessionProfile): Promise<Dashboa
 
   return {
     projects: dashboardProjects,
-    urgentTasks: (urgentRes.data ?? []).flatMap((t) => (t.due_date ? [{ ...t, due_date: t.due_date }] : [])),
+    urgentTasks: (urgentRes.data ?? []).flatMap(({ task_assignees, ...t }) =>
+      t.due_date ? [{ ...t, due_date: t.due_date, assignees: toAssignees(task_assignees) }] : [],
+    ),
     myOpenTasks: myOpenRes.count ?? 0,
     openTasks: openRes.count ?? 0,
     finance,

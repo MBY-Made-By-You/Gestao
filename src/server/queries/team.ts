@@ -48,16 +48,16 @@ export async function getMemberProfile(userId: string) {
         .limit(12),
       supabase
         .from("tasks")
-        .select("id, title, due_date, priority, project_id, project:projects(name, color)")
-        .eq("assignee_id", userId)
+        .select("id, title, due_date, priority, project_id, project:projects(name, color), task_assignees!inner(user_id)")
+        .eq("task_assignees.user_id", userId)
         .is("completed_at", null)
         .not("column_id", "is", null)
         .order("due_date", { ascending: true, nullsFirst: false })
         .limit(10),
       supabase
         .from("tasks")
-        .select("completed_at")
-        .eq("assignee_id", userId)
+        .select("completed_at, task_assignees!inner(user_id)")
+        .eq("task_assignees.user_id", userId)
         .gte("completed_at", since.toISOString()),
       supabase.from("member_stats").select("user_id, xp").order("xp", { ascending: false }),
     ]);
