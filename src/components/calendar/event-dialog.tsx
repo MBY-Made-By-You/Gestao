@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Check, Flag, Loader2, MapPin, Trash2, Users, Video } from "lucide-react";
+import { Check, FileText, Flag, Info, Loader2, MapPin, Trash2, Users, Video } from "lucide-react";
 import { toast } from "sonner";
 
+import { EventMinutesPanel } from "@/components/calendar/event-minutes";
 import { UserAvatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -13,12 +14,14 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/misc";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { EVENT_TYPE_LABEL } from "@/lib/constants";
 import { formatDateTime } from "@/lib/format";
 import { wallTimeToIso, zonedParts } from "@/lib/timezone";
 import type { EventType, MiniProfile } from "@/lib/types";
+import { cn } from "@/lib/utils";
 import { deleteEvent, saveEvent } from "@/server/actions/events";
 import type { CalendarEventItem } from "@/server/queries/calendar";
 
@@ -40,6 +43,7 @@ export function EventDialog({
   projects,
   members,
   canEdit,
+  initialTab = "details",
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -48,6 +52,7 @@ export function EventDialog({
   projects: { id: string; name: string; color: string }[];
   members: MiniProfile[];
   canEdit: boolean;
+  initialTab?: "details" | "minutes";
 }) {
   const start = event ? zonedParts(event.starts_at) : null;
   const end = event?.ends_at ? zonedParts(event.ends_at) : null;
@@ -113,171 +118,200 @@ export function EventDialog({
     });
   }
 
+  const form = (
+    <form onSubmit={submit} className="space-y-5">
+      <ToggleGroup
+        type="single"
+        value={type}
+        onValueChange={(v) => v && setType(v as EventType)}
+        className="w-full"
+        disabled={readOnly}
+        aria-label="Tipo"
+      >
+        <ToggleGroupItem value="meeting" className="flex-1">
+          <Video /> Reunião
+        </ToggleGroupItem>
+        <ToggleGroupItem value="event" className="flex-1">
+          <Users /> Evento
+        </ToggleGroupItem>
+        <ToggleGroupItem value="milestone" className="flex-1">
+          <Flag /> Marco
+        </ToggleGroupItem>
+      </ToggleGroup>
+
+      <div className="space-y-2">
+        <Label htmlFor="event-title">Título</Label>
+        <Input
+          id="event-title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder={type === "milestone" ? "Ex.: Entrega do MVP" : "Ex.: Daily da equipe"}
+          maxLength={160}
+          required
+          disabled={readOnly}
+          autoFocus={!event}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="event-project">Projeto</Label>
+        <Select value={projectId} onValueChange={setProjectId} disabled={readOnly}>
+          <SelectTrigger id="event-project">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value={NONE}>Geral da equipe</SelectItem>
+            <SelectSeparator />
+            {projects.map((p) => (
+              <SelectItem key={p.id} value={p.id}>
+                <span className="size-2 rounded-full" style={{ backgroundColor: p.color }} />
+                {p.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {type !== "milestone" && (
+        <label className="flex items-center justify-between gap-3 text-sm font-semibold">
+          Dia inteiro
+          <Switch checked={allDay} onCheckedChange={setAllDay} disabled={readOnly} />
+        </label>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor="event-date">{allDay && type !== "milestone" ? "Início" : "Data"}</Label>
+          <Input id="event-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required disabled={readOnly} />
+        </div>
+        {type !== "milestone" &&
+          (allDay ? (
+            <div className="space-y-2">
+              <Label htmlFor="event-end-date">Fim</Label>
+              <Input
+                id="event-end-date"
+                type="date"
+                value={endDate}
+                min={date}
+                onChange={(e) => setEndDate(e.target.value)}
+                disabled={readOnly}
+              />
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label htmlFor="event-start-time">Das</Label>
+                <Input id="event-start-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={readOnly} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="event-end-time">Até</Label>
+                <Input id="event-end-time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={readOnly} />
+              </div>
+            </div>
+          ))}
+      </div>
+
+      {type !== "milestone" && (
+        <div className="space-y-2">
+          <Label htmlFor="event-location">Local ou link</Label>
+          <div className="relative">
+            <MapPin className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              id="event-location"
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+              placeholder="Sala, endereço ou link do Meet/Zoom"
+              maxLength={300}
+              className="pl-9"
+              disabled={readOnly}
+            />
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-2">
+        <Label>Participantes</Label>
+        <AttendeePicker members={members} value={attendees} onChange={setAttendees} disabled={readOnly} />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="event-description">Descrição</Label>
+        <Textarea
+          id="event-description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          placeholder="Pauta, links, observações…"
+          maxLength={5000}
+          className="min-h-20"
+          disabled={readOnly}
+        />
+      </div>
+
+      {canEdit && (
+        <DialogFooter className="sm:justify-between">
+          {event ? (
+            <Button type="button" variant="ghost" className="text-destructive" onClick={remove} disabled={pending}>
+              <Trash2 /> Excluir
+            </Button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={pending || !title.trim()}>
+              {pending && <Loader2 className="animate-spin" />}
+              Salvar
+            </Button>
+          </div>
+        </DialogFooter>
+      )}
+    </form>
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-lg">
-        <form onSubmit={submit} className="space-y-5">
-          <DialogHeader>
-            <DialogTitle>{event ? (readOnly ? event.title : "Editar evento") : "Novo evento"}</DialogTitle>
-            <DialogDescription>
-              {event
-                ? `${EVENT_TYPE_LABEL[event.type]} · ${formatDateTime(event.starts_at)}`
-                : "Eventos, reuniões e marcos de entrega aparecem no calendário junto com os prazos das tarefas."}
-            </DialogDescription>
-          </DialogHeader>
-
-          <ToggleGroup
-            type="single"
-            value={type}
-            onValueChange={(v) => v && setType(v as EventType)}
-            className="w-full"
-            disabled={readOnly}
-            aria-label="Tipo"
-          >
-            <ToggleGroupItem value="meeting" className="flex-1">
-              <Video /> Reunião
-            </ToggleGroupItem>
-            <ToggleGroupItem value="event" className="flex-1">
-              <Users /> Evento
-            </ToggleGroupItem>
-            <ToggleGroupItem value="milestone" className="flex-1">
-              <Flag /> Marco
-            </ToggleGroupItem>
-          </ToggleGroup>
-
-          <div className="space-y-2">
-            <Label htmlFor="event-title">Título</Label>
-            <Input
-              id="event-title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder={type === "milestone" ? "Ex.: Entrega do MVP" : "Ex.: Daily da equipe"}
-              maxLength={160}
-              required
-              disabled={readOnly}
-              autoFocus={!event}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="event-project">Projeto</Label>
-            <Select value={projectId} onValueChange={setProjectId} disabled={readOnly}>
-              <SelectTrigger id="event-project">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={NONE}>Geral da equipe</SelectItem>
-                <SelectSeparator />
-                {projects.map((p) => (
-                  <SelectItem key={p.id} value={p.id}>
-                    <span className="size-2 rounded-full" style={{ backgroundColor: p.color }} />
-                    {p.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {type !== "milestone" && (
-            <label className="flex items-center justify-between gap-3 text-sm font-semibold">
-              Dia inteiro
-              <Switch checked={allDay} onCheckedChange={setAllDay} disabled={readOnly} />
-            </label>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="event-date">{allDay && type !== "milestone" ? "Início" : "Data"}</Label>
-              <Input id="event-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} required disabled={readOnly} />
-            </div>
-            {type !== "milestone" &&
-              (allDay ? (
-                <div className="space-y-2">
-                  <Label htmlFor="event-end-date">Fim</Label>
-                  <Input
-                    id="event-end-date"
-                    type="date"
-                    value={endDate}
-                    min={date}
-                    onChange={(e) => setEndDate(e.target.value)}
-                    disabled={readOnly}
-                  />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="event-start-time">Das</Label>
-                    <Input id="event-start-time" type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} disabled={readOnly} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="event-end-time">Até</Label>
-                    <Input id="event-end-time" type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} disabled={readOnly} />
-                  </div>
-                </div>
-              ))}
-          </div>
-
-          {type !== "milestone" && (
-            <div className="space-y-2">
-              <Label htmlFor="event-location">Local ou link</Label>
-              <div className="relative">
-                <MapPin className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
-                <Input
-                  id="event-location"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Sala, endereço ou link do Meet/Zoom"
-                  maxLength={300}
-                  className="pl-9"
-                  disabled={readOnly}
-                />
-              </div>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label>Participantes</Label>
-            <AttendeePicker members={members} value={attendees} onChange={setAttendees} disabled={readOnly} />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="event-description">Descrição</Label>
-            <Textarea
-              id="event-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Pauta, links, observações…"
-              maxLength={5000}
-              className="min-h-20"
-              disabled={readOnly}
-            />
-          </div>
-
-          {canEdit && (
-            <DialogFooter className="sm:justify-between">
-              {event ? (
-                <Button type="button" variant="ghost" className="text-destructive" onClick={remove} disabled={pending}>
-                  <Trash2 /> Excluir
-                </Button>
-              ) : (
-                <span />
-              )}
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-                  Cancelar
-                </Button>
-                <Button type="submit" disabled={pending || !title.trim()}>
-                  {pending && <Loader2 className="animate-spin" />}
-                  Salvar
-                </Button>
-              </div>
-            </DialogFooter>
-          )}
-        </form>
+      <DialogContent className={cn("max-h-[calc(100dvh-2rem)] overflow-y-auto", event ? "sm:max-w-2xl" : "sm:max-w-lg")}>
+        <DialogHeader>
+          <DialogTitle>{event ? (readOnly ? event.title : "Editar evento") : "Novo evento"}</DialogTitle>
+          <DialogDescription>
+            {event
+              ? `${EVENT_TYPE_LABEL[event.type]} · ${formatDateTime(event.starts_at)}`
+              : "Eventos, reuniões e marcos de entrega aparecem no calendário junto com os prazos das tarefas."}
+          </DialogDescription>
+        </DialogHeader>
+        {event ? (
+          <Tabs defaultValue={initialTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="details" className="flex-1">
+                <Info /> Detalhes
+              </TabsTrigger>
+              <TabsTrigger value="minutes" className="flex-1">
+                <FileText /> Ata
+                {event.has_minutes && <span className="size-1.5 rounded-full bg-brand" aria-label="(registrada)" />}
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="details" className="pt-4">
+              {form}
+            </TabsContent>
+            <TabsContent value="minutes" className="pt-4">
+              <EventMinutesPanel
+                eventId={event.id}
+                eventTitle={event.title}
+                eventWhen={`${EVENT_TYPE_LABEL[event.type]} · ${formatDateTime(event.starts_at)}`}
+                canEdit={canEdit}
+              />
+            </TabsContent>
+          </Tabs>
+        ) : (
+          form
+        )}
       </DialogContent>
     </Dialog>
   );
 }
+
 
 function AttendeePicker({
   members,

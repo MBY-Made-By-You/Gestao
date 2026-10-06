@@ -67,3 +67,39 @@ export async function deleteEvent(id: string): Promise<ActionResult> {
   refresh();
   return { ok: true };
 }
+
+const minutesSchema = z.object({
+  summary: z.string().trim().max(20000, "O resumo está longo demais."),
+  decisions: z.string().trim().max(10000, "As decisões estão longas demais."),
+  learnings: z.string().trim().max(10000, "Os aprendizados estão longos demais."),
+  next_steps: z.string().trim().max(10000, "Os próximos passos estão longos demais."),
+});
+
+export type EventMinutesInput = z.input<typeof minutesSchema>;
+
+/** Salva a ata do evento (cria ou atualiza). Ata toda em branco é removida. */
+export async function saveEventMinutes(eventId: string, input: EventMinutesInput): Promise<ActionResult> {
+  if (!uuid.safeParse(eventId).success) return { ok: false, error: "Evento inválido." };
+  const parsed = minutesSchema.safeParse(input);
+  if (!parsed.success) return { ok: false, error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
+  const context = await getActionContext("member");
+  if (!context.ok) return context;
+  const { supabase } = context.ctx;
+  const values = Object.fromEntries(Object.entries(parsed.data).map(([k, v]) => [k, v || null])) as {
+    [K in keyof typeof parsed.data]: string | null;
+  };
+
+  try {
+    if (Object.values(values).every((v) => v === null)) {
+      const { error } = await supabase.from("event_minutes").delete().eq("event_id", eventId);
+      if (error) throw error;
+    } else {
+      const { error } = await supabase.from("event_minutes").upsert({ event_id: eventId, ...values });
+      if (error) throw error;
+    }
+    refresh();
+    return { ok: true };
+  } catch (error) {
+    return failure(error, "Não foi possível salvar a ata.");
+  }
+}

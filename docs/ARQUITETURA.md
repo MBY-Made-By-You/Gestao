@@ -56,6 +56,7 @@ Migrations em [`supabase/migrations`](../supabase/migrations), aplicadas em orde
 | `…_rls_policies.sql` | Privilégios e políticas de Row Level Security |
 | `…_storage.sql` | Buckets e políticas do Storage |
 | `…_realtime_seed.sql` | Publicação do Realtime e categorias financeiras iniciais |
+| `…_event_minutes.sql` | Atas de eventos/reuniões (`event_minutes`, 1:1 com `events`) e sua RLS |
 
 ### 2.1 Diagrama entidade-relacionamento
 
@@ -84,6 +85,7 @@ erDiagram
   PROJECTS |o--o{ EVENTS : agenda
   EVENTS ||--o{ EVENT_ATTENDEES : ""
   PROFILES ||--o{ EVENT_ATTENDEES : ""
+  EVENTS ||--o| EVENT_MINUTES : ata
 ```
 
 ### 2.2 Tabelas principais (DDL resumido)
@@ -224,7 +226,7 @@ Todas com `security_invoker = on` (respeitam a RLS de quem consulta):
 | --- | --- | --- | --- |
 | Projetos, quadro, backlog, sprints, tarefas, anexos | Tudo | Criar/editar (excluir projeto só se for o dono) | **Somente leitura** dos projetos em que é membro |
 | Financeiro e insumos | Tudo, inclusive **excluir** lançamentos/insumos | Criar/editar | Sem acesso |
-| Calendário | Tudo | Criar/editar | Eventos dos seus projetos ou em que é participante |
+| Calendário e atas | Tudo | Criar/editar | Eventos dos seus projetos ou em que é participante; atas só dos eventos em que é participante (leitura) |
 | Equipe | Alterar papéis e convidar | Ver perfis e ranking | Ver perfis e ranking |
 
 Como foi implementado:

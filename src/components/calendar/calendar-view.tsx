@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDays, differenceInCalendarDays, format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { ChevronLeft, ChevronRight, CircleCheck, Circle, Flag, Plus, Video } from "lucide-react";
+import { ChevronLeft, ChevronRight, CircleCheck, Circle, FileText, Flag, Plus, Video } from "lucide-react";
 
 import { EventDialog, type EventDraft } from "@/components/calendar/event-dialog";
 import { ProjectFilterLabel } from "@/components/shared/project-filter-label";
@@ -49,6 +49,8 @@ export function CalendarView({
   projects,
   members,
   canEdit,
+  openEventId,
+  openTab,
 }: {
   view: View;
   anchor: string;
@@ -59,12 +61,22 @@ export function CalendarView({
   projects: { id: string; name: string; color: string }[];
   members: MiniProfile[];
   canEdit: boolean;
+  /** Abre este evento ao carregar (links da página de atas). */
+  openEventId?: string;
+  openTab?: "details" | "minutes";
 }) {
   const router = useRouter();
   const [projectFilter, setProjectFilter] = useState("all");
   const [showTasks, setShowTasks] = useState(true);
   const [showEvents, setShowEvents] = useState(true);
-  const [dialog, setDialog] = useState<{ event: CalendarEventItem | null; draft: EventDraft | null } | null>(null);
+  const [dialog, setDialog] = useState<{
+    event: CalendarEventItem | null;
+    draft: EventDraft | null;
+    tab?: "details" | "minutes";
+  } | null>(() => {
+    const linked = openEventId ? events.find((e) => e.id === openEventId) : undefined;
+    return linked ? { event: linked, draft: null, tab: openTab } : null;
+  });
 
   const anchorDate = parseDateOnly(anchor);
   const days = useMemo(() => {
@@ -171,6 +183,11 @@ export function CalendarView({
             <ToggleGroupItem value="month">Mês</ToggleGroupItem>
             <ToggleGroupItem value="week">Semana</ToggleGroupItem>
           </ToggleGroup>
+          <Button asChild size="sm" variant="outline">
+            <Link href="/calendar/atas">
+              <FileText /> Atas
+            </Link>
+          </Button>
           {canEdit && (
             <Button size="sm" onClick={() => newEvent({ date: today })}>
               <Plus /> Novo evento
@@ -211,6 +228,7 @@ export function CalendarView({
           onOpenChange={(open) => !open && setDialog(null)}
           event={dialog.event}
           draft={dialog.draft}
+          initialTab={dialog.tab}
           projects={projects}
           members={members}
           canEdit={canEdit}
@@ -258,6 +276,7 @@ function EventChip({ event, onOpen, compact }: { event: CalendarEventItem; onOpe
       {event.type === "meeting" && !compact ? <Video className="size-3 shrink-0" style={{ color }} /> : null}
       {time && <span className="shrink-0 font-bold tabular-nums">{time}</span>}
       <span className="truncate">{event.title}</span>
+      {event.has_minutes && <FileText className="ml-auto size-3 shrink-0 opacity-70" aria-label="Tem ata" />}
     </button>
   );
 }
@@ -600,7 +619,10 @@ function WeekGrid({
                             </p>
                           ) : (
                             <>
-                              <p className="truncate font-bold">{event.title}</p>
+                              <p className="flex items-center gap-1 truncate font-bold">
+                            <span className="truncate">{event.title}</span>
+                            {event.has_minutes && <FileText className="size-3 shrink-0 opacity-70" aria-label="Tem ata" />}
+                          </p>
                               <p className="truncate text-muted-foreground tabular-nums">
                                 {start}
                                 {end ? `–${end}` : ""}

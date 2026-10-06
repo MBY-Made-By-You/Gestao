@@ -33,7 +33,8 @@ shadcn/ui e Supabase (Postgres, Auth, Storage e Realtime).
   níveis “Capivara”, conquistas e ranking.
 
 **Calendário** — visões mensal e semanal com os prazos do Kanban, reuniões,
-eventos e marcos de entrega.
+eventos e marcos de entrega. Cada evento tem uma **ata** (o que foi discutido,
+decisões, aprendizados e próximos passos), e a página **Atas** reúne todas com busca.
 
 **Dashboard** — burn-down dos projetos ativos, tarefas urgentes da semana, saldo
 atual, resultado do mês e receitas × despesas dos últimos meses.

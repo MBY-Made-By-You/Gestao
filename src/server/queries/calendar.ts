@@ -12,6 +12,7 @@ export type CalendarView = "month" | "week";
 export type CalendarEventItem = CalendarEvent & {
   project: { id: string; name: string; color: string } | null;
   attendees: string[];
+  has_minutes: boolean;
 };
 
 export type CalendarTaskItem = {
@@ -44,7 +45,7 @@ export async function getCalendarData(view: CalendarView, anchor: Date) {
   const [eventsRes, tasksRes, projectsRes, profilesRes] = await Promise.all([
     supabase
       .from("events")
-      .select("*, project:projects(id, name, color), event_attendees(user_id)")
+      .select("*, project:projects(id, name, color), event_attendees(user_id), event_minutes(event_id)")
       .lte("starts_at", toIso)
       .or(`ends_at.gte.${fromIso},and(ends_at.is.null,starts_at.gte.${fromIso})`)
       .order("starts_at"),
@@ -62,9 +63,10 @@ export async function getCalendarData(view: CalendarView, anchor: Date) {
   if (eventsRes.error) throw eventsRes.error;
   if (tasksRes.error) throw tasksRes.error;
 
-  const events: CalendarEventItem[] = (eventsRes.data ?? []).map(({ event_attendees, ...e }) => ({
+  const events: CalendarEventItem[] = (eventsRes.data ?? []).map(({ event_attendees, event_minutes, ...e }) => ({
     ...e,
     attendees: event_attendees.map((a) => a.user_id),
+    has_minutes: Boolean(event_minutes),
   }));
   const tasks: CalendarTaskItem[] = (tasksRes.data ?? []).flatMap((t) =>
     t.due_date ? [{ ...t, due_date: t.due_date }] : [],
